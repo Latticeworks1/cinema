@@ -27,11 +27,17 @@ pub fn artwork(plan: &Plan, index: usize, bands: Option<&[f32]>) -> String {
     .unwrap();
     chrome::header(&mut s, plan, &st);
     chrome::band(&mut s, plan, &st, bands);
+    let dim = if st.lyric.is_some() { plan.dir.lyric.dim } else { 1.0 };
+    write!(s, "<g opacity='{dim:.2}'>").unwrap();
     for panel in &st.panels {
         draw_panel(&mut s, plan, &st, panel);
     }
+    s.push_str("</g>");
+    if let Some(ly) = &st.lyric {
+        lyric(&mut s, plan, ly);
+    }
     chrome::caption(&mut s, plan, &st);
-    if st.look.lock {
+    if st.look.lock && st.lyric.is_none() {
         lock_marker(&mut s, plan, &st);
     }
     s.push_str("</g></svg>");
@@ -282,4 +288,69 @@ fn lock_marker(s: &mut String, plan: &Plan, st: &FrameState) {
         h * 2.0
     )
     .unwrap();
+}
+
+fn escape(c: char) -> String {
+    match c {
+        '&' => "&amp;".into(),
+        '<' => "&lt;".into(),
+        '>' => "&gt;".into(),
+        c => c.to_string(),
+    }
+}
+
+/// The lyric line, one `<text>` per glyph at an exact column, with hatched boxes on the newest
+/// words. The newest box grows over its word when the line is typed, and is red while locked.
+fn lyric(s: &mut String, plan: &Plan, ly: &direct::LyricState) {
+    let cfg = &plan.dir.lyric;
+    let (adv, size) = (ly.advance(), ly.size);
+    let (x0, base) = (ly.x0, ly.baseline);
+    write!(
+        s,
+        "<defs><pattern id='hatch' width='8' height='8' patternTransform='rotate(45)' patternUnits='userSpaceOnUse'><line x1='0' y1='0' x2='0' y2='8' stroke='#ffffff' stroke-width='1.6'/></pattern></defs>"
+    )
+    .unwrap();
+    write!(
+        s,
+        "<rect x='0' y='{:.1}' width='1920' height='{:.1}' fill='#000000' opacity='{:.2}'/>",
+        base - size * 1.05,
+        size * 1.6,
+        cfg.backing
+    )
+    .unwrap();
+    s.push_str("<g id='lyric'>");
+    for (i, c) in ly.text.chars().take(ly.typed).enumerate() {
+        if c == ' ' {
+            continue;
+        }
+        write!(
+            s,
+            "<text x='{:.1}' y='{:.1}' font-size='{size}' fill='{}'>{}</text>",
+            x0 + i as f32 * adv,
+            base,
+            gray(0.96),
+            escape(c)
+        )
+        .unwrap();
+    }
+    if ly.typed < ly.len && (ly.age * 6.0) as i64 % 2 == 0 {
+        write!(s, "<rect x='{:.1}' y='{:.1}' width='{:.1}' height='{:.1}' fill='#dadada'/>", x0 + ly.typed as f32 * adv + 2.0, base - size * 0.78, adv * 0.5, size * 0.95).unwrap();
+    }
+    let n = ly.words.len();
+    for (k, &(start, len)) in ly.words.iter().enumerate().rev().take(cfg.trail + 1) {
+        let newest = k + 1 == n;
+        let grow = if newest { 0.4 + 0.6 * ly.grow } else { 0.4 };
+        let pad = size * 0.2 * grow;
+        let (x, y) = (x0 + start as f32 * adv - pad, base - size * 0.82 - pad);
+        let (w, h) = (len as f32 * adv + 2.0 * pad, size * 1.0 + 2.0 * pad);
+        let (stroke, sw) = if newest && ly.locked { (RED, 3.0) } else { ("#ffffff", 1.4) };
+        let hatch = if newest { 0.9 } else { 0.5 };
+        write!(
+            s,
+            "<rect x='{x:.1}' y='{y:.1}' width='{w:.1}' height='{h:.1}' fill='url(#hatch)' opacity='{hatch}' style='mix-blend-mode:difference'/><rect x='{x:.1}' y='{y:.1}' width='{w:.1}' height='{h:.1}' fill='none' stroke='{stroke}' stroke-width='{sw}' opacity='{}'/>",
+            if newest { 1.0 } else { 0.55 }
+        )
+        .unwrap();
+    }
+    s.push_str("</g>");
 }

@@ -7,6 +7,7 @@
 use crate::camera::{Camera, Setting, behave, fit_zoom, keep_in_stage, keep_in_view};
 use crate::geometry::{Rect, ease_in_out, ease_out, lerp, rnd, smoothstep};
 use crate::layout::{Layout, Panel, Timeline};
+use crate::lyric::{self, LyricLine, LyricState};
 use crate::matrix::{Matrix, Param};
 use crate::scenes::{Direction, Scene, derive};
 use crate::vocab::{Framing, Vocabulary};
@@ -32,6 +33,7 @@ pub struct Plan {
     pub timeline: Timeline,
     pub scenes: Vec<Scene>,
     pub layouts: Vec<Layout>,
+    pub lyrics: Vec<LyricLine>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -74,6 +76,8 @@ pub struct FrameState {
     pub regions: Vec<Region>,
     pub screen_material: usize,
     pub panels: Vec<Panel>,
+    /// The lyric line being shot, when the frame is in one.
+    pub lyric: Option<LyricState>,
 }
 
 /// Register of `pitch` inside the stem's own range, 0 lowest and 1 highest.
@@ -125,7 +129,8 @@ impl Plan {
             .collect();
         let timeline = Timeline { span_s: dir.panel_span_s, now_frac: dir.now_frac };
         let bus = Bus::with_settings(track.clone(), &SignalSettings::from_json(src.signals)?);
-        Ok(Plan { track, bus, vocab, matrix, dir, timeline, scenes, layouts })
+        let lyrics = lyric::lines(&scenes, &track, &dir);
+        Ok(Plan { track, bus, vocab, matrix, dir, timeline, scenes, layouts, lyrics })
     }
 
     pub fn track(&self) -> &Track {
@@ -294,6 +299,10 @@ impl Plan {
         };
         let mut cam = behave(self.vocab.behaviors[scene.behavior].kind, &setting, &self.dir);
         cam = self.shot(si, t, cam);
+        let lyric = lyric::state(&self.lyrics, &self.dir, index);
+        if let Some(ls) = &lyric {
+            cam = lyric::camera(ls, &self.dir);
+        }
 
         // Pre-drop cinematic arc
         if t < self.track.drop_t {
@@ -349,7 +358,11 @@ impl Plan {
         cam.tilt_x += moved(Param::TiltX);
         cam.tilt_y += moved(Param::TiltY);
         cam.roll += moved(Param::Roll);
-        keep_in_view(&mut cam, follow, &self.dir.camera);
+        let focus = match &lyric {
+            Some(ls) => ls.newest().map_or(ls.line_center(), |w| ls.word_center(w)),
+            None => follow,
+        };
+        keep_in_view(&mut cam, focus, &self.dir.camera);
         keep_in_stage(&mut cam, &self.dir.camera);
 
         let since_start = index as isize - (scene.t0 * FPS as f32).round() as isize;
@@ -365,7 +378,7 @@ impl Plan {
         } else {
             0.0
         };
-        let is_locked = self.locked(si, index);
+        let is_locked = lyric.as_ref().map_or_else(|| self.locked(si, index), |ls| ls.locked);
         let lock_tear = if is_locked { 0.45 } else { 0.0 };
         let lock_aberr = if is_locked { 0.35 } else { 0.0 };
 
@@ -395,7 +408,7 @@ impl Plan {
             t,
             scene: si,
             camera: cam,
-            focus: follow,
+            focus,
             look: LookState {
                 bloom: value(Param::Bloom).clamp(0.0, 1.5),
                 led: value(Param::Led).clamp(0.0, 1.0),
@@ -415,6 +428,7 @@ impl Plan {
             regions,
             screen_material: scene.screen_material,
             panels,
+            lyric,
         }
     }
 

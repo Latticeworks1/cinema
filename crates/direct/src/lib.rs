@@ -7,6 +7,7 @@
 pub mod camera;
 pub mod geometry;
 pub mod layout;
+pub mod lyric;
 pub mod matrix;
 pub mod plan;
 pub mod scenes;
@@ -17,7 +18,8 @@ pub use camera::{Camera, project};
 pub use geometry::{H, Rect, W};
 pub use layout::{Layout, Panel, Timeline};
 pub use matrix::{Matrix, Param};
+pub use lyric::{LyricLine, LyricState};
 pub use plan::{FrameState, LookState, Plan, Region, Sources, register};
 pub use scenes::{Direction, Scene};
-pub use settings::{Attention, CameraLimits, Chrome, Marks, Priority, Shots, Stage, Tracker};
+pub use settings::{Attention, CameraLimits, Chrome, Lyric, Marks, Priority, Shots, Stage, Tracker};
 pub use vocab::{DisplayLayout, EmitKind, Slider, Vocabulary};

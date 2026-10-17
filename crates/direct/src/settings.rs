@@ -141,3 +141,68 @@ pub struct Shots {
     /// Chance a shot frames the whole stage instead of a panel.
     pub wide: f32,
 }
+
+/// Lyric shots: each line of a cue's text becomes its own shot, with the line as the subject.
+/// `size` 0 turns the layer off and the scene's own camera is used.
+#[derive(Clone, Copy, Debug, Deserialize)]
+#[serde(deny_unknown_fields, default)]
+pub struct Lyric {
+    /// Font size of the line in logical pixels; its glyph advance is 0.6 of it.
+    pub size: f32,
+    /// Baseline of the line in logical pixels.
+    pub y: f32,
+    /// Share of the line already typed when its shot opens.
+    pub pre: f32,
+    /// Share of the shot by which the line is fully typed, and the longest that may take.
+    pub type_frac: f32,
+    pub type_cap_s: f32,
+    /// Seconds from the last glyph to the lock on the newest word.
+    pub lock_delay_s: f32,
+    /// Share of the frame width a line fills when the whole line is framed.
+    pub fit_w: f32,
+    /// Chance a shot is close on the newest word instead of framing the line, and its extra zoom.
+    pub close_p: f32,
+    pub close_zoom: f32,
+    /// Extra push over a shot, as a share of its zoom.
+    pub push: f32,
+    pub tilt: f32,
+    pub roll: f32,
+    /// Seconds of the whip into a shot.
+    pub whip_s: f32,
+    pub whip_blur: f32,
+    /// Brightness of the note panels behind a line, and the opacity of the black under it.
+    pub dim: f32,
+    pub backing: f32,
+    /// Typed words boxed and linked behind the newest one.
+    pub trail: usize,
+    /// Shortest a line's shot may be, seconds.
+    pub min_s: f32,
+    /// Seconds from the lock to the line's last glyph leaving (0 keeps it until the next shot).
+    pub hold_s: f32,
+}
+
+impl Default for Lyric {
+    fn default() -> Self {
+        Lyric {
+            size: 0.0,
+            y: 470.0,
+            pre: 0.35,
+            type_frac: 0.5,
+            type_cap_s: 1.5,
+            lock_delay_s: 0.12,
+            fit_w: 0.8,
+            close_p: 0.45,
+            close_zoom: 1.7,
+            push: 0.2,
+            tilt: 0.2,
+            roll: 0.06,
+            whip_s: 0.1,
+            whip_blur: 0.65,
+            dim: 0.3,
+            backing: 0.55,
+            trail: 3,
+            min_s: 0.8,
+            hold_s: 0.0,
+        }
+    }
+}

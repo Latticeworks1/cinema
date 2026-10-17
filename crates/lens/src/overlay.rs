@@ -1,7 +1,7 @@
 //! The camera's own tracker, drawn sharp over the filmed screen: brackets and a label on the
 //! newest note of the leading stem, and links through its last few notes.
 
-use direct::{FrameState, Plan, project, register};
+use direct::{FrameState, LyricState, Plan, project, register};
 use fframes::Svgr;
 use track::note_name;
 
@@ -15,6 +15,9 @@ fn hz(pitch: u8) -> f32 {
 }
 
 pub fn tracker<'a>(plan: &Plan, s: &FrameState) -> Svgr<'a> {
+    if let Some(ly) = &s.lyric {
+        return lyric_tracker(plan, s, ly);
+    }
     let scene = &plan.scenes[s.scene];
     let (Some(stem), Some(panel)) = (plan.track().stem(&scene.dominant), plan.lead_panel(s.scene)) else {
         return Svgr::empty();
@@ -76,46 +79,6 @@ pub fn tracker<'a>(plan: &Plan, s: &FrameState) -> Svgr<'a> {
         items.push(fframes::svgr!(<text x={x0} y={y0 - 9.0} font-family={font} font-size="18" fill={color}>{label}</text>));
     }
 
-    // Text stream tracker in camera space (combining ff-tracking with ff-unmute)
-    if let Some(ref txt) = scene.text {
-        let elapsed = (s.t - scene.t0).max(0.0);
-        let type_span = (scene.duration() * 0.75).max(0.6);
-        let n_chars = txt.chars().count();
-        let count = ((elapsed / type_span) * n_chars as f32).ceil().min(n_chars as f32) as usize;
-        let typed: String = txt.chars().take(count).collect();
-        let prompt_x = 340.0;
-        let char_w = 10.5;
-        let last_space = typed.rfind(' ').map_or(0, |idx| idx + 1);
-        let word_len = count.saturating_sub(last_space).max(1);
-        let wx = prompt_x + 22.0 + last_space as f32 * char_w;
-        let ww = word_len as f32 * char_w;
-        let word_pos = (wx + ww * 0.5, 77.0);
-
-        if let Some(tp) = project(&s.camera, word_pos, RW, RH) {
-            let tcolor = if s.look.lock { LOCK_RED } else { INK };
-            let (tx0, ty0, tx1, ty1) = (tp.0 - ww * 0.6 * s.camera.zoom - 8.0, tp.1 - 16.0, tp.0 + ww * 0.6 * s.camera.zoom + 8.0, tp.1 + 16.0);
-            let corner = |x: f32, y: f32, sx: f32, sy: f32| {
-                format!("M {:.1} {:.1} L {x:.1} {y:.1} L {:.1} {:.1}", x + sx * 10.0, y, x, y + sy * 10.0)
-            };
-            let td = [corner(tx0, ty0, 1.0, 1.0), corner(tx1, ty0, -1.0, 1.0), corner(tx1, ty1, -1.0, -1.0), corner(tx0, ty1, 1.0, -1.0)].join(" ");
-            items.push(fframes::svgr!(<path d={td} fill="none" stroke={tcolor} stroke-width="1.8" opacity="0.8" />));
-            items.push(fframes::svgr!(<circle cx={tp.0} cy={tp.1} r="3" fill={tcolor} opacity="0.75" />));
-            let tlabel = format!("TOKEN [x:{:.0} y:{:.0}]", tp.0, tp.1);
-            items.push(fframes::svgr!(<text x={tx0} y={ty0 - 6.0} font-family={plan.dir.font.clone()} font-size="14" fill={tcolor}>{tlabel}</text>));
-
-            // Dynamic link line from active leading note to active streaming text
-            if let Some(c) = at(last) {
-                let pp = ((s.index as f32 * 0.22)).fract();
-                let pmx = c.0 + (tp.0 - c.0) * pp;
-                let pmy = c.1 + (tp.1 - c.1) * pp;
-                items.push(fframes::svgr!(<g opacity="0.5">
-                    <line x1={c.0} y1={c.1} x2={tp.0} y2={tp.1} stroke={tcolor} stroke-width="1.0" stroke-dasharray="3,5" />
-                    <circle cx={pmx} cy={pmy} r="2.8" fill={tcolor} />
-                </g>));
-            }
-        }
-    }
-
     items.extend(boxes(plan, s));
     fframes::svgr!(<g opacity={0.92 * (1.0 - s.look.out)}>{items}</g>)
 }
@@ -161,4 +124,59 @@ fn boxes<'a>(plan: &Plan, s: &FrameState) -> Vec<Svgr<'a>> {
         </g>));
     }
     out
+}
+
+/// The camera's tracker on a lyric line: links through the newest words in reading order with a
+/// dot running along each, brackets and a labelled coordinate on the newest word, and the boxes
+/// of the notes under it.
+fn lyric_tracker<'a>(plan: &Plan, s: &FrameState, ly: &LyricState) -> Svgr<'a> {
+    let cfg = &plan.dir.lyric;
+    let color = if s.look.lock { LOCK_RED } else { INK };
+    let font = plan.dir.font.clone();
+    let pts: Vec<(String, (f32, f32), f32)> = ly
+        .words
+        .iter()
+        .rev()
+        .take(cfg.trail + 1)
+        .rev()
+        .filter_map(|&(start, len)| {
+            let c = ly.word_center((start, len));
+            project(&s.camera, c, RW, RH).map(|p| {
+                let word: String = ly.text.chars().skip(start).take(len).collect();
+                (word, p, len as f32 * ly.advance() * s.camera.zoom)
+            })
+        })
+        .collect();
+    let mut items: Vec<Svgr> = vec![fframes::svgr!(
+        <defs>
+            <pattern id="tracker-hatch" width="8" height="8" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+                <line x1="0" y1="0" x2="0" y2="8" stroke="#ffffff" stroke-width="1.5" />
+            </pattern>
+        </defs>
+    )];
+    for (k, w) in pts.windows(2).enumerate() {
+        let (a, b) = (w[0].1, w[1].1);
+        items.push(fframes::svgr!(<line x1={a.0} y1={a.1} x2={b.0} y2={b.1} stroke={INK} stroke-width="1.4" opacity="0.8" />));
+        let p = (s.index as f32 * 0.16 + k as f32 * 0.33).fract();
+        items.push(fframes::svgr!(<circle cx={a.0 + (b.0 - a.0) * p} cy={a.1 + (b.1 - a.1) * p} r="3.4" fill={INK} />));
+    }
+    for (_, p, _) in &pts {
+        items.push(fframes::svgr!(<circle cx={p.0} cy={p.1} r="3" fill={INK} />));
+    }
+    if let Some((word, c, w)) = pts.last() {
+        let (dx, dy) = (c.0 - RW * 0.5, c.1 - RH * 0.5);
+        let len = (dx * dx + dy * dy).sqrt().max(1e-3);
+        items.push(fframes::svgr!(<line x1={c.0} y1={c.1} x2={c.0 + dx / len * 2500.0} y2={c.1 + dy / len * 2500.0} stroke={INK} stroke-width="1.0" opacity="0.35" stroke-dasharray="4,8" />));
+        let pad = plan.dir.tracker.grow + if s.look.lock { 6.0 } else { 0.0 };
+        let (hw, hh) = (w * 0.5 + pad + 8.0, ly.size * 0.55 * s.camera.zoom + pad);
+        let (x0, y0, x1, y1) = (c.0 - hw, c.1 - hh, c.0 + hw, c.1 + hh);
+        let arm = plan.dir.tracker.arm.min(hw).min(hh);
+        let corner = |x: f32, y: f32, sx: f32, sy: f32| format!("M {:.1} {:.1} L {x:.1} {y:.1} L {:.1} {:.1}", x + sx * arm, y, x, y + sy * arm);
+        let d = [corner(x0, y0, 1.0, 1.0), corner(x1, y0, -1.0, 1.0), corner(x1, y1, -1.0, -1.0), corner(x0, y1, 1.0, -1.0)].join(" ");
+        items.push(fframes::svgr!(<path d={d} fill="none" stroke={color} stroke-width="2.4" />));
+        let label = format!("{}{} [x:{:.0} y:{:.0}]", if s.look.lock { "LOCK " } else { "" }, word, c.0, c.1);
+        items.push(fframes::svgr!(<text x={x0} y={y0 - 10.0} font-family={font} font-size="18" fill={color}>{label}</text>));
+    }
+    items.extend(boxes(plan, s));
+    fframes::svgr!(<g opacity={0.92 * (1.0 - s.look.out)}>{items}</g>)
 }

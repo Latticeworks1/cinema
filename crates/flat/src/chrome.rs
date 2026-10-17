@@ -292,45 +292,6 @@ pub fn header(s: &mut String, plan: &Plan, st: &FrameState) {
     )
     .unwrap();
 
-    // Streaming text tracking terminal overlay (from ff-tracking & ff-unmute)
-    if let Some(ref txt) = sc.text {
-        let elapsed = (st.t - sc.t0).max(0.0);
-        let type_span = (sc.duration() * 0.75).max(0.6);
-        let n_chars = txt.chars().count();
-        let count = ((elapsed / type_span) * n_chars as f32).ceil().min(n_chars as f32) as usize;
-        let typed: String = txt.chars().take(count).collect();
-        let prompt_x = 340.0;
-        let char_w = 10.5;
-        let cur_x = prompt_x + 24.0 + count as f32 * char_w;
-        let typing = count < n_chars;
-        let cursor_opacity = if typing || (st.index / 12) % 2 == 0 { "0.9" } else { "0.0" };
-
-        write!(
-            s,
-            "<g id='text-stream'><text x='{prompt_x}' y='84' font-size='16' letter-spacing='2' fill='#ff0000'>› </text><text x='{:.1}' y='84' font-size='16' letter-spacing='1' fill='{}'>{}</text><rect x='{:.1}' y='68' width='7' height='18' fill='#dadada' opacity='{cursor_opacity}'/></g>",
-            prompt_x + 22.0,
-            gray(0.92),
-            typed,
-            cur_x
-        )
-        .unwrap();
-
-        // Hatched tracker box over the latest active word
-        if count > 0 {
-            let last_space = typed.rfind(' ').map_or(0, |idx| idx + 1);
-            let word_len = count - last_space;
-            if word_len > 0 {
-                let wx = prompt_x + 22.0 + last_space as f32 * char_w - 3.0;
-                let ww = word_len as f32 * char_w + 6.0;
-                write!(
-                    s,
-                    "<rect x='{:.1}' y='66' width='{:.1}' height='22' fill='none' stroke='{}' stroke-width='1.2' stroke-dasharray='3,3'/>",
-                    wx, ww, if st.look.lock { "#ff0000" } else { "#ffffff" }
-                ).unwrap();
-            }
-        }
-    }
-
     write!(
         s,
         "<text x='1830' y='84' font-size='16' text-anchor='end' fill='{}'>{:.1} BPM · bar {}</text>",
