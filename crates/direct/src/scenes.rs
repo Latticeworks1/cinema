@@ -7,20 +7,11 @@
 //! unusual amount of playing compared with its own average. The vocabulary entry for every
 //! other choice is the one nearest to the scene's measured feel.
 
+use crate::settings::{Attention, CameraLimits, Chrome, Marks, Priority, Shots, Stage, Tracker};
 use crate::vocab::{At, Vocabulary, nearest};
 use serde::{Deserialize, Serialize};
 use signals::{Axes, FeelModel, Selection};
 use track::{FPS, Track};
-
-/// Spread below which a stem's bar-to-bar activity counts as constant.
-const ACTIVITY_STD_FLOOR: f32 = 0.5;
-/// Priorities of the boundary kinds; the thinning keeps higher ones.
-const P_START: u8 = 9;
-const P_IMPACT: u8 = 5;
-const P_DROP: u8 = 4;
-const P_PHRASE: u8 = 3;
-const P_ENTER: u8 = 2;
-const P_EXIT: u8 = 1;
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -41,6 +32,39 @@ pub struct Direction {
     pub lock_frames: usize,
     pub outro_fade_s: f32,
     pub seed: u64,
+    /// Spread below which a stem's bar-to-bar activity counts as constant.
+    /// Family of the text drawn in both passes; its files are in the packet's media folder.
+    pub font: String,
+    pub activity_std_floor: f32,
+    pub attention: Attention,
+    pub priority: Priority,
+    pub stage: Stage,
+    pub camera: CameraLimits,
+    pub marks: Marks,
+    pub tracker: Tracker,
+    pub shots: Shots,
+    pub chrome: Chrome,
+    #[serde(default)]
+    pub cues: Vec<Cue>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct Cue {
+    pub t: f32,
+    #[serde(default)]
+    pub label: Option<String>,
+    #[serde(default)]
+    pub priority: Option<u8>,
+    #[serde(default)]
+    pub palette: Option<String>,
+    #[serde(default)]
+    pub behavior: Option<String>,
+    #[serde(default)]
+    pub look: Option<String>,
+    #[serde(default)]
+    pub layout: Option<String>,
+    #[serde(default)]
+    pub text: Option<String>,
 }
 
 impl Direction {
@@ -53,7 +77,37 @@ impl Direction {
             && (0.3..=1.0).contains(&d.fit)
             && d.panel_span_s > 0.0
             && (0.0..=1.0).contains(&d.now_frac)
-            && d.lock_frames > 0;
+            && d.lock_frames > 0
+            && !d.font.is_empty()
+            && d.activity_std_floor > 0.0
+            && d.attention.lead_s >= 0.0
+            && d.attention.fall_s > 0.0
+            && d.attention.notes > 0
+            && d.stage.w > 0.0
+            && d.stage.h > 0.0
+            && d.stage.grid_cols > 0
+            && (0.0..1.0).contains(&d.stage.hero_share)
+            && d.stage.lane_emphasis > 0.0
+            && d.camera.max_zoom >= 1.0
+            && (0.0..=1.0).contains(&d.camera.stage_slack)
+            && (0.0..0.5).contains(&d.camera.safe_x)
+            && (0.0..0.5).contains(&d.camera.safe_y)
+            && d.marks.note_h > 0.0
+            && d.shots.beats > 0.0
+            && d.shots.whip_s > 0.0
+            && d.shots.zoom > 0.0
+            && (0.0..=1.0).contains(&d.shots.mix)
+            && d.tracker.hold_s > 0.0
+            && d.tracker.arm > 0.0
+            && d.chrome.band_h > 0.0
+            && d.chrome.fft_bands >= 1
+            && d.chrome.fft_lo_hz > 0.0
+            && d.chrome.fft_lo_hz < d.chrome.fft_hi_hz
+            && d.chrome.fft_db_floor < d.chrome.fft_db_ceil
+            && d.chrome.band_span_panels > 0.0
+            && d.chrome.merge_px > 0.0
+            && d.chrome.meter_floor_db < d.chrome.meter_ceil_db
+            && d.cues.iter().all(|c| c.t >= 0.0);
         if ok { Ok(d) } else { Err("direction: a value is out of range".into()) }
     }
 }
@@ -88,6 +142,8 @@ pub struct Scene {
     /// Shape and display material per stem, in vocabulary stem order.
     pub shape_by_stem: Vec<usize>,
     pub material_by_stem: Vec<usize>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub text: Option<String>,
 }
 
 impl Scene {
@@ -116,14 +172,25 @@ fn candidates(track: &Track, d: &Direction) -> Vec<Boundary> {
     let gap = d.entrance_gap_bars * bar;
     let b = |t: f32, priority: u8, reason: String| Boundary { t, priority, reason };
     let mut out = vec![
-        b(0.0, P_START, "start".into()),
-        b(track.drop_t, P_DROP, "drop (first bass note)".into()),
-        b(track.impact_t, P_IMPACT, "impact (beat after the last kick)".into()),
+        b(0.0, d.priority.start, "start".into()),
+        b(track.drop_t, d.priority.drop, "drop (first bass note)".into()),
+        b(track.impact_t, d.priority.impact, "impact (beat after the last kick)".into()),
     ];
     let phrase = d.phrase_bars as f32 * bar;
+    if !d.cues.is_empty() {
+        for cue in &d.cues {
+            out.push(b(cue.t, cue.priority.unwrap_or(8), cue.label.clone().unwrap_or_else(|| format!("cue at {:.2}s", cue.t))));
+        }
+    } else if track.drop_t > 0.0 {
+        let mut pre_k = 1;
+        while pre_k as f32 * phrase < track.drop_t {
+            out.push(b(pre_k as f32 * phrase, d.priority.phrase, format!("phrase (pre-drop {})", pre_k)));
+            pre_k += 1;
+        }
+    }
     let mut k = 1;
     while track.drop_t + k as f32 * phrase < track.impact_t {
-        out.push(b(track.drop_t + k as f32 * phrase, P_PHRASE, format!("phrase {} (every {} bars from the drop)", k + 1, d.phrase_bars)));
+        out.push(b(track.drop_t + k as f32 * phrase, d.priority.phrase, format!("phrase {} (every {} bars from the drop)", k + 1, d.phrase_bars)));
         k += 1;
     }
     for s in &track.stems {
@@ -131,7 +198,7 @@ fn candidates(track: &Track, d: &Direction) -> Vec<Boundary> {
         for (i, n) in s.notes.iter().enumerate() {
             let first = i == 0;
             if (first && n.onset > 0.5 * bar) || (!first && n.onset - end >= gap) {
-                out.push(b(n.onset, P_ENTER, format!("{} enters", s.name)));
+                out.push(b(n.onset, d.priority.enter, format!("{} enters", s.name)));
             }
             end = end.max(n.offset);
             let next = s.notes.get(i + 1).map(|m| m.onset);
@@ -140,11 +207,11 @@ fn candidates(track: &Track, d: &Direction) -> Vec<Boundary> {
                 None => track.duration_s - end >= gap,
             };
             if leaves {
-                out.push(b(end, P_EXIT, format!("{} leaves", s.name)));
+                out.push(b(end, d.priority.exit, format!("{} leaves", s.name)));
             }
         }
     }
-    for c in out.iter_mut().filter(|c| c.priority != P_START) {
+    for c in out.iter_mut().filter(|c| c.priority != d.priority.start) {
         if let (t, Some(stem)) = snap(c.t, track, d) {
             c.t = t;
             c.reason = format!("{}, cut on {stem}", c.reason);
@@ -167,7 +234,7 @@ fn thin(mut cands: Vec<Boundary>, min_gap: f32) -> Vec<Boundary> {
 }
 
 /// Per-stem mean and spread of notes per bar over the whole track.
-fn activity_norm(track: &Track) -> Vec<(f32, f32)> {
+fn activity_norm(track: &Track, floor: f32) -> Vec<(f32, f32)> {
     let bars = (track.duration_s / track.bar_s).floor().max(1.0) as usize;
     track
         .stems
@@ -181,14 +248,14 @@ fn activity_norm(track: &Track) -> Vec<(f32, f32)> {
                 .collect();
             let mean = counts.iter().sum::<f32>() / bars as f32;
             let var = counts.iter().map(|c| (c - mean).powi(2)).sum::<f32>() / bars as f32;
-            (mean, var.sqrt().max(ACTIVITY_STD_FLOOR))
+            (mean, var.sqrt().max(floor))
         })
         .collect()
 }
 
 pub fn derive(track: &Track, feel: &FeelModel, vocab: &Vocabulary, d: &Direction) -> Result<Vec<Scene>, String> {
     let bounds = thin(candidates(track, d), d.min_scene_bars * track.bar_s);
-    let norm = activity_norm(track);
+    let norm = activity_norm(track, d.activity_std_floor);
     let mut scenes: Vec<Scene> = vec![];
     for (i, bd) in bounds.iter().enumerate() {
         let t1 = bounds.get(i + 1).map_or(track.duration_s, |n| n.t);
@@ -226,6 +293,12 @@ pub fn derive(track: &Track, feel: &FeelModel, vocab: &Vocabulary, d: &Direction
         let screen_material = nearest(&vocab.materials, at, None, 0.0);
         let shape_by_stem = stem_axes.iter().map(|a| nearest(&vocab.shapes, pos(a), None, 0.0)).collect();
         let material_by_stem = stem_axes.iter().map(|a| nearest(&vocab.materials, pos(a), None, 0.0)).collect();
+        let matched_cue = d.cues.iter().find(|c| (c.t - t0).abs() < 0.25 || (snap(c.t, track, d).0 - t0).abs() < 0.05);
+        let palette = matched_cue.and_then(|c| c.palette.as_deref()).and_then(|p| vocab.palette_index(p)).unwrap_or(palette);
+        let behavior = matched_cue.and_then(|c| c.behavior.as_deref()).and_then(|b| vocab.behavior_index(b)).unwrap_or(behavior);
+        let look = matched_cue.and_then(|c| c.look.as_deref()).and_then(|l| vocab.look_index(l)).unwrap_or(look);
+        let layout = matched_cue.and_then(|c| c.layout.as_deref()).and_then(|l| vocab.layout_index(l)).unwrap_or(layout);
+        let text = matched_cue.and_then(|c| c.text.clone());
 
         scenes.push(Scene {
             index: i,
@@ -243,6 +316,7 @@ pub fn derive(track: &Track, feel: &FeelModel, vocab: &Vocabulary, d: &Direction
             screen_material,
             shape_by_stem,
             material_by_stem,
+            text,
         });
     }
     Ok(scenes)
@@ -320,12 +394,41 @@ mod tests {
         assert!(muted.len() <= full.len() && muted.len() + 4 >= full.len(), "{} vs {}", muted.len(), full.len());
     }
 
+    fn direction_with(edit: impl FnOnce(&mut serde_json::Value)) -> Result<Direction, String> {
+        let mut v: serde_json::Value = serde_json::from_str(include_str!("../../../vocab/direction.json")).unwrap();
+        edit(&mut v);
+        Direction::parse(&v.to_string())
+    }
+
     #[test]
-    fn neighbouring_scenes_differ_in_palette_and_behaviour() {
+    fn the_chrome_band_is_read_and_its_ranges_are_checked() {
+        let d = direction_with(|_| {}).unwrap();
+        assert_eq!((d.chrome.band_y, d.chrome.band_h, d.chrome.fft_bands), (836.0, 124.0, 48));
+        assert!(d.stage.y + d.stage.h <= d.chrome.band_y, "stage must end above the chrome band");
+        assert!(direction_with(|v| v["chrome"]["band_h"] = 0.0.into()).is_err());
+        assert!(direction_with(|v| v["chrome"]["fft_bands"] = 0.into()).is_err());
+        assert!(direction_with(|v| v["chrome"]["fft_lo_hz"] = 16000.into()).is_err());
+        assert!(direction_with(|v| v["chrome"]["fft_db_floor"] = 48.0.into()).is_err());
+        assert!(direction_with(|v| v["chrome"]["fft_hz"] = 1.into()).is_err(), "unknown key");
+        assert!(direction_with(|v| { v.as_object_mut().unwrap().remove("chrome"); }).is_err(), "chrome is required");
+    }
+
+    #[test]
+    fn neighbouring_scenes_differ_unless_every_alternative_is_farther_than_the_penalty() {
+        use crate::vocab::{At, Placed};
+        fn check<T: Placed>(kind: &str, items: &[T], scenes: &[Scene], pick: impl Fn(&Scene) -> usize, penalty: f32) {
+            for w in scenes.windows(2) {
+                let (here, i) = (At { edge: w[1].axes.edge, energy: w[1].axes.energy }, pick(&w[1]));
+                if i == pick(&w[0]) {
+                    let own = items[i].at().distance(here);
+                    let best_other = (0..items.len()).filter(|k| *k != i).map(|k| items[k].at().distance(here)).fold(f32::MAX, f32::min);
+                    assert!(best_other - own >= penalty, "{kind} repeats at {} though another lies within the penalty", w[1].t0);
+                }
+            }
+        }
         let (t, f, v, d) = setup();
         let s = derive(&t, &f, &v, &d).unwrap();
-        for w in s.windows(2) {
-            assert_ne!(w[0].palette, w[1].palette, "palette repeats at {}", w[1].t0);
-        }
+        check("palette", &v.palettes, &s, |x| x.palette, d.repeat_penalty);
+        check("behavior", &v.behaviors, &s, |x| x.behavior, d.repeat_penalty);
     }
 }

@@ -6,6 +6,10 @@
 
 mod bus;
 mod feel;
+mod rhythm;
+mod settings;
 
 pub use bus::{Bus, MasterSignal, Source, SourceError, StemSignal};
+pub use settings::{BusSettings, RhythmSettings, SignalSettings};
+pub use rhythm::{MAX_OSCILLATORS, Oscillator, Rhythm, RhythmSignal};
 pub use feel::{Axes, EdgeWeights, EnergyWeights, FeelModel, FeelSettings, Selection};

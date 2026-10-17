@@ -7,7 +7,7 @@
 
 use crate::geometry::smoothstep;
 use serde::Deserialize;
-use signals::{Bus, Source};
+use signals::{Bus, MAX_OSCILLATORS, Source};
 use std::collections::HashSet;
 
 /// Samples across a smoothing window.
@@ -162,6 +162,11 @@ impl Matrix {
                     return Err(format!("matrix route {i}: `{}` names no declared stem", r.from));
                 }
             }
+            if let Source::Rhythm(rank, _) = &source {
+                if *rank >= MAX_OSCILLATORS {
+                    return Err(format!("matrix route {i}: `{}` names no oscillator rank (the bus has {MAX_OSCILLATORS})", r.from));
+                }
+            }
             let to = Param::parse(&r.to).ok_or_else(|| format!("matrix route {i}: no parameter `{}`", r.to))?;
             if !(r.gain.is_finite() && r.smooth_s >= 0.0 && r.lead_s.is_finite()) {
                 return Err(format!("matrix route {i}: gain, smooth_s and lead_s must be finite, smooth_s non-negative"));
@@ -260,6 +265,7 @@ mod tests {
             r#"{"routes":[{"from":"kick.hit","to":"puncch","gain":1.0}]}"#,
             r#"{"routes":[{"from":"kick.hot","to":"punch","gain":1.0}]}"#,
             r#"{"routes":[{"from":"kick.hit","to":"punch","gain":1.0,"curv":"sine"}]}"#,
+            r#"{"routes":[{"from":"rhythm.6.pulse","to":"punch","gain":1.0}]}"#,
         ] {
             assert!(Matrix::parse(bad, &stems()).is_err(), "{bad}");
         }

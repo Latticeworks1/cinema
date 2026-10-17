@@ -203,6 +203,8 @@ pub struct LayoutDef {
 #[serde(deny_unknown_fields)]
 struct RawVocabulary {
     stems: Vec<StemDef>,
+    /// Ink of a stem the track has and `stems` does not list.
+    default_ink: f32,
     shapes: Vec<Shape>,
     palettes: Vec<RawPalette>,
     behaviors: Vec<Behavior>,
@@ -255,15 +257,20 @@ fn unique<T: Placed>(kind: &str, items: &[T]) -> Result<(), String> {
 }
 
 impl Vocabulary {
-    /// Parse and check. `track_stems` must all be listed, so no stem is left without a panel.
+    /// Parse and check. A track stem the vocabulary does not list is appended with `default_ink`,
+    /// so any instrument the transcriber names gets a panel.
     pub fn parse(json: &str, track_stems: &[&str]) -> Result<Vocabulary, String> {
-        let raw: RawVocabulary = serde_json::from_str(json).map_err(|e| format!("vocabulary: {e}"))?;
+        let mut raw: RawVocabulary = serde_json::from_str(json).map_err(|e| format!("vocabulary: {e}"))?;
+        if !(0.0..=1.0).contains(&raw.default_ink) {
+            return Err("vocabulary: default_ink must lie in 0..1".into());
+        }
         let listed: HashSet<&str> = raw.stems.iter().map(|s| s.name.as_str()).collect();
         if listed.len() != raw.stems.len() {
             return Err("vocabulary: duplicate stem".into());
         }
-        if let Some(missing) = track_stems.iter().find(|s| !listed.contains(**s)) {
-            return Err(format!("vocabulary: the track has a stem `{missing}` that the vocabulary does not list"));
+        let unlisted: Vec<String> = track_stems.iter().filter(|s| !listed.contains(**s)).map(|s| s.to_string()).collect();
+        for name in unlisted {
+            raw.stems.push(StemDef { name, ink: raw.default_ink });
         }
         let palettes = raw
             .palettes
@@ -326,6 +333,22 @@ impl Vocabulary {
     pub fn stem_index(&self, name: &str) -> Option<usize> {
         self.stems.iter().position(|s| s.name == name)
     }
+
+    pub fn palette_index(&self, name: &str) -> Option<usize> {
+        self.palettes.iter().position(|p| p.name.eq_ignore_ascii_case(name))
+    }
+
+    pub fn behavior_index(&self, name: &str) -> Option<usize> {
+        self.behaviors.iter().position(|b| b.name.eq_ignore_ascii_case(name))
+    }
+
+    pub fn look_index(&self, name: &str) -> Option<usize> {
+        self.looks.iter().position(|l| l.name.eq_ignore_ascii_case(name))
+    }
+
+    pub fn layout_index(&self, name: &str) -> Option<usize> {
+        self.layouts.iter().position(|l| l.name.eq_ignore_ascii_case(name))
+    }
 }
 
 #[cfg(test)]
@@ -346,11 +369,13 @@ mod tests {
     }
 
     #[test]
-    fn a_stem_the_vocabulary_omits_is_refused() {
+    fn a_stem_the_vocabulary_omits_gets_the_default_ink() {
         let mut stems = TRACK_STEMS.to_vec();
         stems.push("choir");
-        let err = Vocabulary::parse(include_str!("../../../vocab/vocabulary.json"), &stems).unwrap_err();
-        assert!(err.contains("choir"), "{err}");
+        let v = Vocabulary::parse(include_str!("../../../vocab/vocabulary.json"), &stems).unwrap();
+        let i = v.stem_index("choir").expect("appended");
+        assert_eq!(i, v.stems.len() - 1);
+        assert_eq!(v.stems[i].ink, 0.7);
     }
 
     #[test]

@@ -1,7 +1,8 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "source": {
     "audio_file": "data/audio.wav",
+    "level_source": "audio",
     "audio_sha256": "4bdcd0c7def2ce669eff4e3e3b00eec44251a9d918211faaed59aa2276a6e264",
     "audio_duration_s": 31.0,
     "audio_sample_rate": 48000,
@@ -12,15 +13,17 @@
     "total_frames_at_30fps": 930
   },
   "tempo": {
-    "bpm": 153.8,
-    "derivation": "median_kick_inter_onset_interval",
-    "median_ioi_s": 0.39,
-    "sample_count": 75
+    "bpm": 154.95,
+    "derivation": "onset_comb_fit",
+    "beat_s": 0.38723,
+    "confidence": 1.0,
+    "sample_count": 163
   },
   "measurements": {
-    "kick_hz": 45.4,
-    "bass_hz": 61.5,
-    "first_kick_t": 0.04,
+    "peaks_hz": {
+      "kick": 45.4,
+      "bass": 61.5
+    },
     "loudest": {
       "frame": 210,
       "t": 7.0,
@@ -5930,2541 +5933,2030 @@
       "name": "Bm7"
     },
     {
-      "t": 7.78,
+      "t": 7.769,
       "name": "F#m7"
     },
     {
-      "t": 9.341,
+      "t": 9.318,
       "name": "Gmaj7"
     },
     {
-      "t": 10.901,
+      "t": 10.867,
       "name": "F#m7"
     },
     {
-      "t": 12.462,
+      "t": 12.416,
       "name": "Bm7"
     },
     {
-      "t": 14.022,
+      "t": 13.965,
       "name": "F#m7"
     },
     {
-      "t": 15.583,
+      "t": 15.514,
       "name": "Gmaj7"
     },
     {
-      "t": 17.143,
+      "t": 17.062,
       "name": "F#m7"
     },
     {
-      "t": 18.704,
+      "t": 18.611,
       "name": "Bm7"
     },
     {
-      "t": 20.264,
+      "t": 20.16,
       "name": "F#m7"
     },
     {
-      "t": 21.825,
+      "t": 21.709,
       "name": "Gmaj7"
     },
     {
-      "t": 23.385,
-      "name": "F#m7"
+      "t": 23.258,
+      "name": "A7"
     },
     {
-      "t": 24.946,
+      "t": 24.807,
       "name": "Bm7"
     },
     {
-      "t": 26.506,
+      "t": 26.356,
       "name": "F#m7"
     },
     {
-      "t": 28.067,
+      "t": 27.905,
       "name": "Gmaj7"
+    },
+    {
+      "t": 29.454,
+      "name": "Gm7"
     }
   ],
   "structure": {
     "drop_t": 6.22,
-    "bar_s": 1.5605,
-    "impact_t": 29.46
+    "bar_s": 1.5489,
+    "impact_t": 29.457
   },
-  "events": {
-    "kicks": [
-      0.04,
-      0.42,
-      0.81,
-      1.19,
-      1.58,
-      1.96,
-      2.35,
-      2.74,
-      3.12,
-      3.51,
-      3.9,
-      4.28,
-      4.67,
-      5.06,
-      5.44,
-      5.83,
-      6.22,
-      6.61,
-      6.99,
-      7.38,
-      7.77,
-      8.16,
-      8.54,
-      8.93,
-      9.32,
-      9.71,
-      10.09,
-      10.47,
-      10.86,
-      11.25,
-      11.64,
-      12.03,
-      12.42,
-      12.8,
-      13.19,
-      13.57,
-      13.96,
-      14.35,
-      14.74,
-      15.13,
-      15.52,
-      15.9,
-      16.28,
-      16.67,
-      17.05,
-      17.45,
-      17.84,
-      18.24,
-      18.63,
-      19.01,
-      19.39,
-      19.77,
-      20.17,
-      20.55,
-      20.94,
-      21.32,
-      21.7,
-      22.09,
-      22.48,
-      22.87,
-      23.26,
-      23.65,
-      24.04,
-      24.43,
-      24.82,
-      25.2,
-      25.58,
-      25.97,
-      26.35,
-      26.74,
-      27.13,
-      27.52,
-      27.91,
-      28.29,
-      28.68,
-      29.07
-    ],
-    "claps": [
-      6.9,
-      7.19,
-      7.38,
-      8.16,
-      8.44,
-      8.73,
-      8.93,
-      9.22,
-      9.71,
-      10.28,
-      10.47,
-      11.25,
-      12.03,
-      12.8,
-      13.38,
-      13.57,
-      14.35,
-      15.13,
-      15.9,
-      16.67,
-      17.45,
-      18.24,
-      19.01,
-      19.77,
-      20.55,
-      20.84,
-      21.13,
-      21.32,
-      22.09,
-      22.39,
-      22.68,
-      22.87,
-      23.65,
-      23.94,
-      24.23,
-      24.43
-    ],
-    "hats": [
-      0.23,
-      0.61,
-      1.0,
-      1.38,
-      1.77,
-      2.16,
-      2.54,
-      2.93,
-      3.32,
-      3.7,
-      4.09,
-      4.48,
-      4.86,
-      5.25,
-      5.64,
-      6.02,
-      6.41,
-      6.8,
-      7.19,
-      7.58,
-      7.96,
-      8.35,
-      8.73,
-      9.12,
-      9.51,
-      9.9,
-      10.67,
-      10.77,
-      11.05,
-      11.44,
-      11.54,
-      11.83,
-      12.22,
-      12.32,
-      12.61,
-      12.99,
-      13.09,
-      13.77,
-      13.87,
-      14.16,
-      14.55,
-      14.64,
-      14.94,
-      15.32,
-      15.42,
-      15.71,
-      16.09,
-      16.19,
-      16.48,
-      16.86,
-      16.96,
-      17.25,
-      17.64,
-      17.74,
-      18.04,
-      18.43,
-      18.53,
-      18.82,
-      19.2,
-      19.29,
-      19.58,
-      19.96,
-      20.36,
-      20.74,
-      21.13,
-      21.51,
-      21.9,
-      22.29,
-      22.68,
-      23.07,
-      23.45,
-      23.84,
-      24.23,
-      24.62
-    ]
-  },
-  "instruments": {
-    "electric_bass": [
-      {
-        "onset": 6.22,
-        "offset": 7.77,
-        "duration": 1.55,
-        "pitch": 35,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 7.77,
-        "offset": 9.32,
-        "duration": 1.55,
-        "pitch": 30,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 9.32,
-        "offset": 10.09,
-        "duration": 0.77,
-        "pitch": 31,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 10.09,
-        "offset": 10.47,
-        "duration": 0.38,
-        "pitch": 31,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 10.47,
-        "offset": 10.86,
-        "duration": 0.39,
-        "pitch": 31,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 10.86,
-        "offset": 11.25,
-        "duration": 0.39,
-        "pitch": 28,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 11.25,
-        "offset": 11.64,
-        "duration": 0.39,
-        "pitch": 28,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 11.64,
-        "offset": 12.03,
-        "duration": 0.39,
-        "pitch": 28,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 12.03,
-        "offset": 12.42,
-        "duration": 0.39,
-        "pitch": 28,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 12.42,
-        "offset": 12.8,
-        "duration": 0.38,
-        "pitch": 35,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 12.8,
-        "offset": 13.19,
-        "duration": 0.39,
-        "pitch": 35,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 13.19,
-        "offset": 13.57,
-        "duration": 0.38,
-        "pitch": 35,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 13.57,
-        "offset": 13.96,
-        "duration": 0.39,
-        "pitch": 35,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 13.96,
-        "offset": 14.35,
-        "duration": 0.39,
-        "pitch": 30,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 14.35,
-        "offset": 14.74,
-        "duration": 0.39,
-        "pitch": 30,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 14.74,
-        "offset": 15.52,
-        "duration": 0.78,
-        "pitch": 30,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 15.52,
-        "offset": 17.05,
-        "duration": 1.53,
-        "pitch": 31,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 17.05,
-        "offset": 18.63,
-        "duration": 1.58,
-        "pitch": 28,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 18.63,
-        "offset": 20.17,
-        "duration": 1.54,
-        "pitch": 35,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 20.17,
-        "offset": 20.55,
-        "duration": 0.38,
-        "pitch": 30,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 20.55,
-        "offset": 20.94,
-        "duration": 0.39,
-        "pitch": 30,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 20.94,
-        "offset": 21.32,
-        "duration": 0.38,
-        "pitch": 30,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 21.32,
-        "offset": 21.7,
-        "duration": 0.38,
-        "pitch": 30,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 21.7,
-        "offset": 22.09,
-        "duration": 0.39,
-        "pitch": 31,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 22.09,
-        "offset": 22.48,
-        "duration": 0.39,
-        "pitch": 31,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 22.48,
-        "offset": 22.87,
-        "duration": 0.39,
-        "pitch": 31,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 22.87,
-        "offset": 23.26,
-        "duration": 0.39,
-        "pitch": 31,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 23.26,
-        "offset": 23.65,
-        "duration": 0.39,
-        "pitch": 28,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 23.65,
-        "offset": 24.04,
-        "duration": 0.39,
-        "pitch": 28,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 24.04,
-        "offset": 24.43,
-        "duration": 0.39,
-        "pitch": 28,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 24.43,
-        "offset": 24.82,
-        "duration": 0.39,
-        "pitch": 28,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 24.82,
-        "offset": 25.2,
-        "duration": 0.38,
-        "pitch": 35,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 25.2,
-        "offset": 25.58,
-        "duration": 0.38,
-        "pitch": 35,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 25.58,
-        "offset": 25.97,
-        "duration": 0.39,
-        "pitch": 35,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 25.97,
-        "offset": 26.35,
-        "duration": 0.38,
-        "pitch": 35,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 26.35,
-        "offset": 26.74,
-        "duration": 0.39,
-        "pitch": 30,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 26.74,
-        "offset": 27.13,
-        "duration": 0.39,
-        "pitch": 30,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 27.13,
-        "offset": 27.52,
-        "duration": 0.39,
-        "pitch": 30,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 27.52,
-        "offset": 27.91,
-        "duration": 0.39,
-        "pitch": 30,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 27.91,
-        "offset": 28.29,
-        "duration": 0.38,
-        "pitch": 31,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 28.29,
-        "offset": 28.68,
-        "duration": 0.39,
-        "pitch": 31,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 28.68,
-        "offset": 29.07,
-        "duration": 0.39,
-        "pitch": 31,
-        "instrument": "electric_bass"
-      },
-      {
-        "onset": 29.07,
-        "offset": 29.46,
-        "duration": 0.39,
-        "pitch": 31,
-        "instrument": "electric_bass"
-      }
-    ],
-    "electric_piano": [
+  "stems": {
+    "piano": [
       {
         "onset": 6.22,
         "offset": 6.41,
         "duration": 0.19,
-        "pitch": 54,
-        "instrument": "electric_piano"
+        "pitch": 54
       },
       {
         "onset": 6.41,
         "offset": 6.61,
         "duration": 0.2,
-        "pitch": 59,
-        "instrument": "electric_piano"
+        "pitch": 59
       },
       {
         "onset": 6.61,
         "offset": 6.99,
         "duration": 0.38,
-        "pitch": 62,
-        "instrument": "electric_piano"
+        "pitch": 62
       },
       {
         "onset": 6.99,
         "offset": 7.19,
         "duration": 0.2,
-        "pitch": 54,
-        "instrument": "electric_piano"
+        "pitch": 54
       },
       {
         "onset": 7.19,
         "offset": 7.38,
         "duration": 0.19,
-        "pitch": 59,
-        "instrument": "electric_piano"
+        "pitch": 59
       },
       {
         "onset": 7.38,
         "offset": 7.77,
         "duration": 0.39,
-        "pitch": 62,
-        "instrument": "electric_piano"
+        "pitch": 62
       },
       {
         "onset": 7.77,
         "offset": 7.96,
         "duration": 0.19,
-        "pitch": 61,
-        "instrument": "electric_piano"
+        "pitch": 61
       },
       {
         "onset": 7.96,
         "offset": 8.16,
         "duration": 0.2,
-        "pitch": 64,
-        "instrument": "electric_piano"
+        "pitch": 64
       },
       {
         "onset": 8.16,
         "offset": 8.93,
         "duration": 0.77,
-        "pitch": 69,
-        "instrument": "electric_piano"
+        "pitch": 69
       },
       {
         "onset": 8.93,
         "offset": 9.32,
         "duration": 0.39,
-        "pitch": 64,
-        "instrument": "electric_piano"
+        "pitch": 64
       },
       {
         "onset": 8.93,
         "offset": 9.32,
         "duration": 0.39,
-        "pitch": 69,
-        "instrument": "electric_piano"
+        "pitch": 69
       },
       {
         "onset": 9.32,
         "offset": 9.51,
         "duration": 0.19,
-        "pitch": 54,
-        "instrument": "electric_piano"
+        "pitch": 54
       },
       {
         "onset": 9.51,
         "offset": 9.71,
         "duration": 0.2,
-        "pitch": 59,
-        "instrument": "electric_piano"
+        "pitch": 59
       },
       {
         "onset": 9.71,
         "offset": 10.09,
         "duration": 0.38,
-        "pitch": 62,
-        "instrument": "electric_piano"
+        "pitch": 62
       },
       {
         "onset": 10.09,
         "offset": 10.28,
         "duration": 0.19,
-        "pitch": 66,
-        "instrument": "electric_piano"
+        "pitch": 66
       },
       {
         "onset": 10.28,
         "offset": 10.47,
         "duration": 0.19,
-        "pitch": 59,
-        "instrument": "electric_piano"
+        "pitch": 59
       },
       {
         "onset": 10.28,
         "offset": 10.47,
         "duration": 0.19,
-        "pitch": 71,
-        "instrument": "electric_piano"
+        "pitch": 71
       },
       {
         "onset": 10.47,
         "offset": 10.86,
         "duration": 0.39,
-        "pitch": 62,
-        "instrument": "electric_piano"
+        "pitch": 62
       },
       {
         "onset": 10.47,
         "offset": 10.86,
         "duration": 0.39,
-        "pitch": 81,
-        "instrument": "electric_piano"
+        "pitch": 81
       },
       {
         "onset": 10.86,
         "offset": 11.05,
         "duration": 0.19,
-        "pitch": 61,
-        "instrument": "electric_piano"
+        "pitch": 61
       },
       {
         "onset": 10.86,
         "offset": 12.42,
         "duration": 1.56,
-        "pitch": 81,
-        "instrument": "electric_piano"
+        "pitch": 81
       },
       {
         "onset": 11.05,
         "offset": 11.25,
         "duration": 0.2,
-        "pitch": 64,
-        "instrument": "electric_piano"
+        "pitch": 64
       },
       {
         "onset": 11.25,
         "offset": 12.03,
         "duration": 0.78,
-        "pitch": 69,
-        "instrument": "electric_piano"
+        "pitch": 69
       },
       {
         "onset": 12.03,
         "offset": 12.42,
         "duration": 0.39,
-        "pitch": 69,
-        "instrument": "electric_piano"
+        "pitch": 69
       },
       {
         "onset": 12.42,
         "offset": 12.61,
         "duration": 0.19,
-        "pitch": 54,
-        "instrument": "electric_piano"
+        "pitch": 54
       },
       {
         "onset": 12.61,
         "offset": 12.8,
         "duration": 0.19,
-        "pitch": 59,
-        "instrument": "electric_piano"
+        "pitch": 59
       },
       {
         "onset": 12.61,
         "offset": 12.8,
         "duration": 0.19,
-        "pitch": 71,
-        "instrument": "electric_piano"
+        "pitch": 71
       },
       {
         "onset": 12.8,
         "offset": 13.19,
         "duration": 0.39,
-        "pitch": 62,
-        "instrument": "electric_piano"
+        "pitch": 62
       },
       {
         "onset": 13.19,
         "offset": 13.38,
         "duration": 0.19,
-        "pitch": 54,
-        "instrument": "electric_piano"
+        "pitch": 54
       },
       {
         "onset": 13.38,
         "offset": 13.57,
         "duration": 0.19,
-        "pitch": 59,
-        "instrument": "electric_piano"
+        "pitch": 59
       },
       {
         "onset": 13.38,
         "offset": 13.57,
         "duration": 0.19,
-        "pitch": 71,
-        "instrument": "electric_piano"
+        "pitch": 71
       },
       {
         "onset": 13.57,
         "offset": 13.77,
         "duration": 0.2,
-        "pitch": 62,
-        "instrument": "electric_piano"
+        "pitch": 62
       },
       {
         "onset": 13.57,
         "offset": 13.96,
         "duration": 0.39,
-        "pitch": 81,
-        "instrument": "electric_piano"
+        "pitch": 81
       },
       {
         "onset": 13.77,
         "offset": 13.96,
         "duration": 0.19,
-        "pitch": 74,
-        "instrument": "electric_piano"
+        "pitch": 74
       },
       {
         "onset": 13.96,
         "offset": 14.16,
         "duration": 0.2,
-        "pitch": 61,
-        "instrument": "electric_piano"
+        "pitch": 61
       },
       {
         "onset": 13.96,
         "offset": 14.94,
         "duration": 0.98,
-        "pitch": 81,
-        "instrument": "electric_piano"
+        "pitch": 81
       },
       {
         "onset": 14.16,
         "offset": 14.35,
         "duration": 0.19,
-        "pitch": 64,
-        "instrument": "electric_piano"
+        "pitch": 64
       },
       {
         "onset": 14.35,
         "offset": 14.74,
         "duration": 0.39,
-        "pitch": 69,
-        "instrument": "electric_piano"
+        "pitch": 69
       },
       {
         "onset": 14.74,
         "offset": 14.94,
         "duration": 0.2,
-        "pitch": 61,
-        "instrument": "electric_piano"
+        "pitch": 61
       },
       {
         "onset": 14.94,
         "offset": 15.13,
         "duration": 0.19,
-        "pitch": 81,
-        "instrument": "electric_piano"
+        "pitch": 81
       },
       {
         "onset": 15.13,
         "offset": 15.52,
         "duration": 0.39,
-        "pitch": 69,
-        "instrument": "electric_piano"
+        "pitch": 69
       },
       {
         "onset": 15.52,
         "offset": 16.28,
         "duration": 0.76,
-        "pitch": 81,
-        "instrument": "electric_piano"
+        "pitch": 81
       },
       {
         "onset": 15.71,
         "offset": 15.9,
         "duration": 0.19,
-        "pitch": 59,
-        "instrument": "electric_piano"
+        "pitch": 59
       },
       {
         "onset": 15.9,
         "offset": 16.09,
         "duration": 0.19,
-        "pitch": 62,
-        "instrument": "electric_piano"
+        "pitch": 62
       },
       {
         "onset": 16.48,
         "offset": 16.67,
         "duration": 0.19,
-        "pitch": 59,
-        "instrument": "electric_piano"
+        "pitch": 59
       },
       {
         "onset": 16.67,
         "offset": 16.86,
         "duration": 0.19,
-        "pitch": 62,
-        "instrument": "electric_piano"
+        "pitch": 62
       },
       {
         "onset": 16.86,
         "offset": 17.05,
         "duration": 0.19,
-        "pitch": 69,
-        "instrument": "electric_piano"
+        "pitch": 69
       },
       {
         "onset": 17.05,
         "offset": 17.25,
         "duration": 0.2,
-        "pitch": 69,
-        "instrument": "electric_piano"
+        "pitch": 69
       },
       {
         "onset": 17.25,
         "offset": 17.45,
         "duration": 0.2,
-        "pitch": 64,
-        "instrument": "electric_piano"
+        "pitch": 64
       },
       {
         "onset": 17.45,
         "offset": 17.84,
         "duration": 0.39,
-        "pitch": 69,
-        "instrument": "electric_piano"
+        "pitch": 69
       },
       {
         "onset": 17.45,
         "offset": 17.64,
         "duration": 0.19,
-        "pitch": 74,
-        "instrument": "electric_piano"
+        "pitch": 74
       },
       {
         "onset": 17.64,
         "offset": 17.84,
         "duration": 0.2,
-        "pitch": 73,
-        "instrument": "electric_piano"
+        "pitch": 73
       },
       {
         "onset": 17.84,
         "offset": 18.04,
         "duration": 0.2,
-        "pitch": 71,
-        "instrument": "electric_piano"
+        "pitch": 71
       },
       {
         "onset": 18.04,
         "offset": 18.24,
         "duration": 0.2,
-        "pitch": 73,
-        "instrument": "electric_piano"
+        "pitch": 73
       },
       {
         "onset": 18.24,
         "offset": 18.63,
         "duration": 0.39,
-        "pitch": 69,
-        "instrument": "electric_piano"
+        "pitch": 69
       },
       {
         "onset": 18.63,
         "offset": 19.39,
         "duration": 0.76,
-        "pitch": 69,
-        "instrument": "electric_piano"
+        "pitch": 69
       },
       {
         "onset": 18.82,
         "offset": 19.01,
         "duration": 0.19,
-        "pitch": 59,
-        "instrument": "electric_piano"
+        "pitch": 59
       },
       {
         "onset": 19.01,
         "offset": 19.2,
         "duration": 0.19,
-        "pitch": 62,
-        "instrument": "electric_piano"
+        "pitch": 62
       },
       {
         "onset": 19.58,
         "offset": 19.77,
         "duration": 0.19,
-        "pitch": 59,
-        "instrument": "electric_piano"
+        "pitch": 59
       },
       {
         "onset": 19.77,
         "offset": 19.96,
         "duration": 0.19,
-        "pitch": 62,
-        "instrument": "electric_piano"
+        "pitch": 62
       },
       {
         "onset": 19.96,
         "offset": 20.17,
         "duration": 0.21,
-        "pitch": 69,
-        "instrument": "electric_piano"
+        "pitch": 69
       },
       {
         "onset": 20.17,
         "offset": 20.36,
         "duration": 0.19,
-        "pitch": 61,
-        "instrument": "electric_piano"
+        "pitch": 61
       },
       {
         "onset": 20.36,
         "offset": 20.55,
         "duration": 0.19,
-        "pitch": 64,
-        "instrument": "electric_piano"
+        "pitch": 64
       },
       {
         "onset": 20.55,
         "offset": 21.13,
         "duration": 0.58,
-        "pitch": 69,
-        "instrument": "electric_piano"
+        "pitch": 69
       },
       {
         "onset": 21.13,
         "offset": 21.32,
         "duration": 0.19,
-        "pitch": 64,
-        "instrument": "electric_piano"
+        "pitch": 64
       },
       {
         "onset": 21.32,
         "offset": 21.7,
         "duration": 0.38,
-        "pitch": 69,
-        "instrument": "electric_piano"
+        "pitch": 69
       },
       {
         "onset": 21.7,
         "offset": 21.9,
         "duration": 0.2,
-        "pitch": 54,
-        "instrument": "electric_piano"
+        "pitch": 54
       },
       {
         "onset": 21.9,
         "offset": 22.09,
         "duration": 0.19,
-        "pitch": 59,
-        "instrument": "electric_piano"
+        "pitch": 59
       },
       {
         "onset": 22.09,
         "offset": 22.29,
         "duration": 0.2,
-        "pitch": 62,
-        "instrument": "electric_piano"
+        "pitch": 62
       },
       {
         "onset": 22.29,
         "offset": 22.48,
         "duration": 0.19,
-        "pitch": 69,
-        "instrument": "electric_piano"
+        "pitch": 69
       },
       {
         "onset": 22.48,
         "offset": 22.68,
         "duration": 0.2,
-        "pitch": 54,
-        "instrument": "electric_piano"
+        "pitch": 54
       },
       {
         "onset": 22.68,
         "offset": 22.87,
         "duration": 0.19,
-        "pitch": 59,
-        "instrument": "electric_piano"
+        "pitch": 59
       },
       {
         "onset": 22.87,
         "offset": 23.26,
         "duration": 0.39,
-        "pitch": 62,
-        "instrument": "electric_piano"
+        "pitch": 62
       },
       {
         "onset": 22.87,
         "offset": 23.26,
         "duration": 0.39,
-        "pitch": 69,
-        "instrument": "electric_piano"
+        "pitch": 69
       },
       {
         "onset": 23.26,
         "offset": 23.65,
         "duration": 0.39,
-        "pitch": 61,
-        "instrument": "electric_piano"
+        "pitch": 61
       },
       {
         "onset": 23.65,
         "offset": 24.04,
         "duration": 0.39,
-        "pitch": 69,
-        "instrument": "electric_piano"
+        "pitch": 69
       },
       {
         "onset": 24.04,
         "offset": 24.43,
         "duration": 0.39,
-        "pitch": 61,
-        "instrument": "electric_piano"
+        "pitch": 61
       },
       {
         "onset": 24.43,
         "offset": 24.82,
         "duration": 0.39,
-        "pitch": 69,
-        "instrument": "electric_piano"
+        "pitch": 69
       },
       {
         "onset": 24.82,
         "offset": 25.2,
         "duration": 0.38,
-        "pitch": 54,
-        "instrument": "electric_piano"
+        "pitch": 54
       },
       {
         "onset": 25.2,
         "offset": 25.39,
         "duration": 0.19,
-        "pitch": 62,
-        "instrument": "electric_piano"
+        "pitch": 62
       },
       {
         "onset": 25.39,
         "offset": 25.58,
         "duration": 0.19,
-        "pitch": 62,
-        "instrument": "electric_piano"
+        "pitch": 62
       },
       {
         "onset": 25.58,
         "offset": 25.77,
         "duration": 0.19,
-        "pitch": 54,
-        "instrument": "electric_piano"
+        "pitch": 54
       },
       {
         "onset": 25.77,
         "offset": 25.97,
         "duration": 0.2,
-        "pitch": 59,
-        "instrument": "electric_piano"
+        "pitch": 59
       },
       {
         "onset": 25.97,
         "offset": 26.35,
         "duration": 0.38,
-        "pitch": 62,
-        "instrument": "electric_piano"
+        "pitch": 62
       },
       {
         "onset": 25.97,
         "offset": 26.35,
         "duration": 0.38,
-        "pitch": 69,
-        "instrument": "electric_piano"
+        "pitch": 69
       },
       {
         "onset": 26.35,
         "offset": 26.54,
         "duration": 0.19,
-        "pitch": 54,
-        "instrument": "electric_piano"
+        "pitch": 54
       },
       {
         "onset": 26.54,
         "offset": 26.74,
         "duration": 0.2,
-        "pitch": 64,
-        "instrument": "electric_piano"
+        "pitch": 64
       },
       {
         "onset": 26.74,
         "offset": 27.13,
         "duration": 0.39,
-        "pitch": 57,
-        "instrument": "electric_piano"
+        "pitch": 57
       },
       {
         "onset": 27.13,
         "offset": 27.52,
         "duration": 0.39,
-        "pitch": 61,
-        "instrument": "electric_piano"
+        "pitch": 61
       },
       {
         "onset": 27.52,
         "offset": 27.91,
         "duration": 0.39,
-        "pitch": 57,
-        "instrument": "electric_piano"
+        "pitch": 57
       },
       {
         "onset": 27.91,
         "offset": 28.1,
         "duration": 0.19,
-        "pitch": 54,
-        "instrument": "electric_piano"
+        "pitch": 54
       },
       {
         "onset": 28.1,
         "offset": 28.29,
         "duration": 0.19,
-        "pitch": 66,
-        "instrument": "electric_piano"
+        "pitch": 66
       },
       {
         "onset": 28.29,
         "offset": 28.68,
         "duration": 0.39,
-        "pitch": 62,
-        "instrument": "electric_piano"
+        "pitch": 62
       },
       {
         "onset": 28.68,
         "offset": 28.88,
         "duration": 0.2,
-        "pitch": 54,
-        "instrument": "electric_piano"
+        "pitch": 54
       },
       {
         "onset": 28.88,
         "offset": 29.07,
         "duration": 0.19,
-        "pitch": 59,
-        "instrument": "electric_piano"
+        "pitch": 59
       },
       {
         "onset": 29.07,
         "offset": 29.46,
         "duration": 0.39,
-        "pitch": 62,
-        "instrument": "electric_piano"
+        "pitch": 62
       }
     ],
-    "drums": [
+    "bass": [
+      {
+        "onset": 6.22,
+        "offset": 7.77,
+        "duration": 1.55,
+        "pitch": 35
+      },
+      {
+        "onset": 7.77,
+        "offset": 9.32,
+        "duration": 1.55,
+        "pitch": 30
+      },
+      {
+        "onset": 9.32,
+        "offset": 10.09,
+        "duration": 0.77,
+        "pitch": 31
+      },
+      {
+        "onset": 10.09,
+        "offset": 10.47,
+        "duration": 0.38,
+        "pitch": 31
+      },
+      {
+        "onset": 10.47,
+        "offset": 10.86,
+        "duration": 0.39,
+        "pitch": 31
+      },
+      {
+        "onset": 10.86,
+        "offset": 11.25,
+        "duration": 0.39,
+        "pitch": 28
+      },
+      {
+        "onset": 11.25,
+        "offset": 11.64,
+        "duration": 0.39,
+        "pitch": 28
+      },
+      {
+        "onset": 11.64,
+        "offset": 12.03,
+        "duration": 0.39,
+        "pitch": 28
+      },
+      {
+        "onset": 12.03,
+        "offset": 12.42,
+        "duration": 0.39,
+        "pitch": 28
+      },
+      {
+        "onset": 12.42,
+        "offset": 12.8,
+        "duration": 0.38,
+        "pitch": 35
+      },
+      {
+        "onset": 12.8,
+        "offset": 13.19,
+        "duration": 0.39,
+        "pitch": 35
+      },
+      {
+        "onset": 13.19,
+        "offset": 13.57,
+        "duration": 0.38,
+        "pitch": 35
+      },
+      {
+        "onset": 13.57,
+        "offset": 13.96,
+        "duration": 0.39,
+        "pitch": 35
+      },
+      {
+        "onset": 13.96,
+        "offset": 14.35,
+        "duration": 0.39,
+        "pitch": 30
+      },
+      {
+        "onset": 14.35,
+        "offset": 14.74,
+        "duration": 0.39,
+        "pitch": 30
+      },
+      {
+        "onset": 14.74,
+        "offset": 15.52,
+        "duration": 0.78,
+        "pitch": 30
+      },
+      {
+        "onset": 15.52,
+        "offset": 17.05,
+        "duration": 1.53,
+        "pitch": 31
+      },
+      {
+        "onset": 17.05,
+        "offset": 18.63,
+        "duration": 1.58,
+        "pitch": 28
+      },
+      {
+        "onset": 18.63,
+        "offset": 20.17,
+        "duration": 1.54,
+        "pitch": 35
+      },
+      {
+        "onset": 20.17,
+        "offset": 20.55,
+        "duration": 0.38,
+        "pitch": 30
+      },
+      {
+        "onset": 20.55,
+        "offset": 20.94,
+        "duration": 0.39,
+        "pitch": 30
+      },
+      {
+        "onset": 20.94,
+        "offset": 21.32,
+        "duration": 0.38,
+        "pitch": 30
+      },
+      {
+        "onset": 21.32,
+        "offset": 21.7,
+        "duration": 0.38,
+        "pitch": 30
+      },
+      {
+        "onset": 21.7,
+        "offset": 22.09,
+        "duration": 0.39,
+        "pitch": 31
+      },
+      {
+        "onset": 22.09,
+        "offset": 22.48,
+        "duration": 0.39,
+        "pitch": 31
+      },
+      {
+        "onset": 22.48,
+        "offset": 22.87,
+        "duration": 0.39,
+        "pitch": 31
+      },
+      {
+        "onset": 22.87,
+        "offset": 23.26,
+        "duration": 0.39,
+        "pitch": 31
+      },
+      {
+        "onset": 23.26,
+        "offset": 23.65,
+        "duration": 0.39,
+        "pitch": 28
+      },
+      {
+        "onset": 23.65,
+        "offset": 24.04,
+        "duration": 0.39,
+        "pitch": 28
+      },
+      {
+        "onset": 24.04,
+        "offset": 24.43,
+        "duration": 0.39,
+        "pitch": 28
+      },
+      {
+        "onset": 24.43,
+        "offset": 24.82,
+        "duration": 0.39,
+        "pitch": 28
+      },
+      {
+        "onset": 24.82,
+        "offset": 25.2,
+        "duration": 0.38,
+        "pitch": 35
+      },
+      {
+        "onset": 25.2,
+        "offset": 25.58,
+        "duration": 0.38,
+        "pitch": 35
+      },
+      {
+        "onset": 25.58,
+        "offset": 25.97,
+        "duration": 0.39,
+        "pitch": 35
+      },
+      {
+        "onset": 25.97,
+        "offset": 26.35,
+        "duration": 0.38,
+        "pitch": 35
+      },
+      {
+        "onset": 26.35,
+        "offset": 26.74,
+        "duration": 0.39,
+        "pitch": 30
+      },
+      {
+        "onset": 26.74,
+        "offset": 27.13,
+        "duration": 0.39,
+        "pitch": 30
+      },
+      {
+        "onset": 27.13,
+        "offset": 27.52,
+        "duration": 0.39,
+        "pitch": 30
+      },
+      {
+        "onset": 27.52,
+        "offset": 27.91,
+        "duration": 0.39,
+        "pitch": 30
+      },
+      {
+        "onset": 27.91,
+        "offset": 28.29,
+        "duration": 0.38,
+        "pitch": 31
+      },
+      {
+        "onset": 28.29,
+        "offset": 28.68,
+        "duration": 0.39,
+        "pitch": 31
+      },
+      {
+        "onset": 28.68,
+        "offset": 29.07,
+        "duration": 0.39,
+        "pitch": 31
+      },
+      {
+        "onset": 29.07,
+        "offset": 29.46,
+        "duration": 0.39,
+        "pitch": 31
+      }
+    ],
+    "kick": [
       {
         "onset": 0.04,
         "offset": 0.05,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
-      },
-      {
-        "onset": 0.23,
-        "offset": 0.24,
-        "duration": 0.01,
-        "pitch": 44,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 0.42,
         "offset": 0.43,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
-      },
-      {
-        "onset": 0.61,
-        "offset": 0.62,
-        "duration": 0.01,
-        "pitch": 44,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 0.81,
         "offset": 0.82,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
-      },
-      {
-        "onset": 1.0,
-        "offset": 1.01,
-        "duration": 0.01,
-        "pitch": 44,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 1.19,
         "offset": 1.2,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
-      },
-      {
-        "onset": 1.38,
-        "offset": 1.39,
-        "duration": 0.01,
-        "pitch": 44,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 1.58,
         "offset": 1.59,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
-      },
-      {
-        "onset": 1.77,
-        "offset": 1.78,
-        "duration": 0.01,
-        "pitch": 44,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 1.96,
         "offset": 1.97,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
-      },
-      {
-        "onset": 2.16,
-        "offset": 2.17,
-        "duration": 0.01,
-        "pitch": 44,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 2.35,
         "offset": 2.36,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
-      },
-      {
-        "onset": 2.54,
-        "offset": 2.55,
-        "duration": 0.01,
-        "pitch": 44,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 2.74,
         "offset": 2.75,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
-      },
-      {
-        "onset": 2.93,
-        "offset": 2.94,
-        "duration": 0.01,
-        "pitch": 44,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 3.12,
         "offset": 3.13,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
-      },
-      {
-        "onset": 3.32,
-        "offset": 3.33,
-        "duration": 0.01,
-        "pitch": 44,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 3.51,
         "offset": 3.52,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
-      },
-      {
-        "onset": 3.7,
-        "offset": 3.71,
-        "duration": 0.01,
-        "pitch": 44,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 3.9,
         "offset": 3.91,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
-      },
-      {
-        "onset": 4.09,
-        "offset": 4.1,
-        "duration": 0.01,
-        "pitch": 44,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 4.28,
         "offset": 4.29,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
-      },
-      {
-        "onset": 4.48,
-        "offset": 4.49,
-        "duration": 0.01,
-        "pitch": 44,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 4.67,
         "offset": 4.68,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
-      },
-      {
-        "onset": 4.86,
-        "offset": 4.87,
-        "duration": 0.01,
-        "pitch": 44,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 5.06,
         "offset": 5.07,
         "duration": 0.01,
-        "pitch": 35,
-        "instrument": "drums"
-      },
-      {
-        "onset": 5.25,
-        "offset": 5.26,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 35
       },
       {
         "onset": 5.44,
         "offset": 5.45,
         "duration": 0.01,
-        "pitch": 35,
-        "instrument": "drums"
-      },
-      {
-        "onset": 5.64,
-        "offset": 5.65,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 35
       },
       {
         "onset": 5.83,
         "offset": 5.84,
         "duration": 0.01,
-        "pitch": 35,
-        "instrument": "drums"
-      },
-      {
-        "onset": 6.02,
-        "offset": 6.03,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 35
       },
       {
         "onset": 6.22,
         "offset": 6.23,
         "duration": 0.01,
-        "pitch": 35,
-        "instrument": "drums"
-      },
-      {
-        "onset": 6.41,
-        "offset": 6.42,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 35
       },
       {
         "onset": 6.61,
         "offset": 6.62,
         "duration": 0.01,
-        "pitch": 35,
-        "instrument": "drums"
-      },
-      {
-        "onset": 6.8,
-        "offset": 6.81,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
-      },
-      {
-        "onset": 6.9,
-        "offset": 6.91,
-        "duration": 0.01,
-        "pitch": 38,
-        "instrument": "drums"
+        "pitch": 35
       },
       {
         "onset": 6.99,
         "offset": 7.0,
         "duration": 0.01,
-        "pitch": 35,
-        "instrument": "drums"
-      },
-      {
-        "onset": 7.19,
-        "offset": 7.2,
-        "duration": 0.01,
-        "pitch": 38,
-        "instrument": "drums"
-      },
-      {
-        "onset": 7.19,
-        "offset": 7.2,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 35
       },
       {
         "onset": 7.38,
         "offset": 7.39,
         "duration": 0.01,
-        "pitch": 35,
-        "instrument": "drums"
-      },
-      {
-        "onset": 7.38,
-        "offset": 7.39,
-        "duration": 0.01,
-        "pitch": 38,
-        "instrument": "drums"
-      },
-      {
-        "onset": 7.58,
-        "offset": 7.59,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 35
       },
       {
         "onset": 7.77,
         "offset": 7.78,
         "duration": 0.01,
-        "pitch": 35,
-        "instrument": "drums"
-      },
-      {
-        "onset": 7.96,
-        "offset": 7.97,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 35
       },
       {
         "onset": 8.16,
         "offset": 8.17,
         "duration": 0.01,
-        "pitch": 35,
-        "instrument": "drums"
-      },
-      {
-        "onset": 8.16,
-        "offset": 8.17,
-        "duration": 0.01,
-        "pitch": 38,
-        "instrument": "drums"
-      },
-      {
-        "onset": 8.35,
-        "offset": 8.36,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
-      },
-      {
-        "onset": 8.44,
-        "offset": 8.45,
-        "duration": 0.01,
-        "pitch": 38,
-        "instrument": "drums"
+        "pitch": 35
       },
       {
         "onset": 8.54,
         "offset": 8.55,
         "duration": 0.01,
-        "pitch": 35,
-        "instrument": "drums"
-      },
-      {
-        "onset": 8.73,
-        "offset": 8.74,
-        "duration": 0.01,
-        "pitch": 38,
-        "instrument": "drums"
-      },
-      {
-        "onset": 8.73,
-        "offset": 8.74,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 35
       },
       {
         "onset": 8.93,
         "offset": 8.94,
         "duration": 0.01,
-        "pitch": 35,
-        "instrument": "drums"
-      },
-      {
-        "onset": 8.93,
-        "offset": 8.94,
-        "duration": 0.01,
-        "pitch": 38,
-        "instrument": "drums"
-      },
-      {
-        "onset": 9.12,
-        "offset": 9.13,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
-      },
-      {
-        "onset": 9.22,
-        "offset": 9.23,
-        "duration": 0.01,
-        "pitch": 38,
-        "instrument": "drums"
+        "pitch": 35
       },
       {
         "onset": 9.32,
         "offset": 9.33,
         "duration": 0.01,
-        "pitch": 35,
-        "instrument": "drums"
-      },
-      {
-        "onset": 9.51,
-        "offset": 9.52,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 35
       },
       {
         "onset": 9.71,
         "offset": 9.72,
         "duration": 0.01,
-        "pitch": 35,
-        "instrument": "drums"
-      },
-      {
-        "onset": 9.71,
-        "offset": 9.72,
-        "duration": 0.01,
-        "pitch": 38,
-        "instrument": "drums"
-      },
-      {
-        "onset": 9.9,
-        "offset": 9.91,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 35
       },
       {
         "onset": 10.09,
         "offset": 10.1,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
-      },
-      {
-        "onset": 10.28,
-        "offset": 10.29,
-        "duration": 0.01,
-        "pitch": 37,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 10.47,
         "offset": 10.48,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
-      },
-      {
-        "onset": 10.47,
-        "offset": 10.48,
-        "duration": 0.01,
-        "pitch": 37,
-        "instrument": "drums"
-      },
-      {
-        "onset": 10.67,
-        "offset": 10.68,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
-      },
-      {
-        "onset": 10.77,
-        "offset": 10.78,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 10.86,
         "offset": 10.87,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
-      },
-      {
-        "onset": 11.05,
-        "offset": 11.06,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 11.25,
         "offset": 11.26,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
-      },
-      {
-        "onset": 11.25,
-        "offset": 11.26,
-        "duration": 0.01,
-        "pitch": 37,
-        "instrument": "drums"
-      },
-      {
-        "onset": 11.44,
-        "offset": 11.45,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
-      },
-      {
-        "onset": 11.54,
-        "offset": 11.55,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 11.64,
         "offset": 11.65,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
-      },
-      {
-        "onset": 11.83,
-        "offset": 11.84,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 12.03,
         "offset": 12.04,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
-      },
-      {
-        "onset": 12.03,
-        "offset": 12.04,
-        "duration": 0.01,
-        "pitch": 37,
-        "instrument": "drums"
-      },
-      {
-        "onset": 12.22,
-        "offset": 12.23,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
-      },
-      {
-        "onset": 12.32,
-        "offset": 12.33,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 12.42,
         "offset": 12.43,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
-      },
-      {
-        "onset": 12.61,
-        "offset": 12.62,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 12.8,
         "offset": 12.81,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
-      },
-      {
-        "onset": 12.8,
-        "offset": 12.81,
-        "duration": 0.01,
-        "pitch": 37,
-        "instrument": "drums"
-      },
-      {
-        "onset": 12.99,
-        "offset": 13.0,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
-      },
-      {
-        "onset": 13.09,
-        "offset": 13.1,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 13.19,
         "offset": 13.2,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
-      },
-      {
-        "onset": 13.38,
-        "offset": 13.39,
-        "duration": 0.01,
-        "pitch": 37,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 13.57,
         "offset": 13.58,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
-      },
-      {
-        "onset": 13.57,
-        "offset": 13.58,
-        "duration": 0.01,
-        "pitch": 37,
-        "instrument": "drums"
-      },
-      {
-        "onset": 13.77,
-        "offset": 13.78,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
-      },
-      {
-        "onset": 13.87,
-        "offset": 13.88,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 13.96,
         "offset": 13.97,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
-      },
-      {
-        "onset": 14.16,
-        "offset": 14.17,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 14.35,
         "offset": 14.36,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
-      },
-      {
-        "onset": 14.35,
-        "offset": 14.36,
-        "duration": 0.01,
-        "pitch": 37,
-        "instrument": "drums"
-      },
-      {
-        "onset": 14.55,
-        "offset": 14.56,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
-      },
-      {
-        "onset": 14.64,
-        "offset": 14.65,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 14.74,
         "offset": 14.75,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
-      },
-      {
-        "onset": 14.94,
-        "offset": 14.95,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 15.13,
         "offset": 15.14,
         "duration": 0.01,
-        "pitch": 35,
-        "instrument": "drums"
-      },
-      {
-        "onset": 15.13,
-        "offset": 15.14,
-        "duration": 0.01,
-        "pitch": 38,
-        "instrument": "drums"
-      },
-      {
-        "onset": 15.32,
-        "offset": 15.33,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
-      },
-      {
-        "onset": 15.42,
-        "offset": 15.43,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 35
       },
       {
         "onset": 15.52,
         "offset": 15.53,
         "duration": 0.01,
-        "pitch": 35,
-        "instrument": "drums"
-      },
-      {
-        "onset": 15.71,
-        "offset": 15.72,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 35
       },
       {
         "onset": 15.9,
         "offset": 15.91,
         "duration": 0.01,
-        "pitch": 35,
-        "instrument": "drums"
-      },
-      {
-        "onset": 15.9,
-        "offset": 15.91,
-        "duration": 0.01,
-        "pitch": 38,
-        "instrument": "drums"
-      },
-      {
-        "onset": 16.09,
-        "offset": 16.1,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
-      },
-      {
-        "onset": 16.19,
-        "offset": 16.2,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 35
       },
       {
         "onset": 16.28,
         "offset": 16.29,
         "duration": 0.01,
-        "pitch": 35,
-        "instrument": "drums"
-      },
-      {
-        "onset": 16.48,
-        "offset": 16.49,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 35
       },
       {
         "onset": 16.67,
         "offset": 16.68,
         "duration": 0.01,
-        "pitch": 35,
-        "instrument": "drums"
-      },
-      {
-        "onset": 16.67,
-        "offset": 16.68,
-        "duration": 0.01,
-        "pitch": 38,
-        "instrument": "drums"
-      },
-      {
-        "onset": 16.86,
-        "offset": 16.87,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
-      },
-      {
-        "onset": 16.96,
-        "offset": 16.97,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 35
       },
       {
         "onset": 17.05,
         "offset": 17.06,
         "duration": 0.01,
-        "pitch": 35,
-        "instrument": "drums"
-      },
-      {
-        "onset": 17.25,
-        "offset": 17.26,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 35
       },
       {
         "onset": 17.45,
         "offset": 17.46,
         "duration": 0.01,
-        "pitch": 35,
-        "instrument": "drums"
-      },
-      {
-        "onset": 17.45,
-        "offset": 17.46,
-        "duration": 0.01,
-        "pitch": 38,
-        "instrument": "drums"
-      },
-      {
-        "onset": 17.64,
-        "offset": 17.65,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
-      },
-      {
-        "onset": 17.74,
-        "offset": 17.75,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 35
       },
       {
         "onset": 17.84,
         "offset": 17.85,
         "duration": 0.01,
-        "pitch": 35,
-        "instrument": "drums"
-      },
-      {
-        "onset": 18.04,
-        "offset": 18.05,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 35
       },
       {
         "onset": 18.24,
         "offset": 18.25,
         "duration": 0.01,
-        "pitch": 35,
-        "instrument": "drums"
-      },
-      {
-        "onset": 18.24,
-        "offset": 18.25,
-        "duration": 0.01,
-        "pitch": 38,
-        "instrument": "drums"
-      },
-      {
-        "onset": 18.43,
-        "offset": 18.44,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
-      },
-      {
-        "onset": 18.53,
-        "offset": 18.54,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 35
       },
       {
         "onset": 18.63,
         "offset": 18.64,
         "duration": 0.01,
-        "pitch": 35,
-        "instrument": "drums"
-      },
-      {
-        "onset": 18.82,
-        "offset": 18.83,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 35
       },
       {
         "onset": 19.01,
         "offset": 19.02,
         "duration": 0.01,
-        "pitch": 35,
-        "instrument": "drums"
-      },
-      {
-        "onset": 19.01,
-        "offset": 19.02,
-        "duration": 0.01,
-        "pitch": 38,
-        "instrument": "drums"
-      },
-      {
-        "onset": 19.2,
-        "offset": 19.21,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
-      },
-      {
-        "onset": 19.29,
-        "offset": 19.3,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 35
       },
       {
         "onset": 19.39,
         "offset": 19.4,
         "duration": 0.01,
-        "pitch": 35,
-        "instrument": "drums"
-      },
-      {
-        "onset": 19.58,
-        "offset": 19.59,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 35
       },
       {
         "onset": 19.77,
         "offset": 19.78,
         "duration": 0.01,
-        "pitch": 35,
-        "instrument": "drums"
-      },
-      {
-        "onset": 19.77,
-        "offset": 19.78,
-        "duration": 0.01,
-        "pitch": 38,
-        "instrument": "drums"
-      },
-      {
-        "onset": 19.96,
-        "offset": 19.97,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 35
       },
       {
         "onset": 20.17,
         "offset": 20.18,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
-      },
-      {
-        "onset": 20.36,
-        "offset": 20.37,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 20.55,
         "offset": 20.56,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
-      },
-      {
-        "onset": 20.55,
-        "offset": 20.56,
-        "duration": 0.01,
-        "pitch": 37,
-        "instrument": "drums"
-      },
-      {
-        "onset": 20.74,
-        "offset": 20.75,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
-      },
-      {
-        "onset": 20.84,
-        "offset": 20.85,
-        "duration": 0.01,
-        "pitch": 37,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 20.94,
         "offset": 20.95,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
-      },
-      {
-        "onset": 21.13,
-        "offset": 21.14,
-        "duration": 0.01,
-        "pitch": 37,
-        "instrument": "drums"
-      },
-      {
-        "onset": 21.13,
-        "offset": 21.14,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 21.32,
         "offset": 21.33,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
-      },
-      {
-        "onset": 21.32,
-        "offset": 21.33,
-        "duration": 0.01,
-        "pitch": 37,
-        "instrument": "drums"
-      },
-      {
-        "onset": 21.51,
-        "offset": 21.52,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 21.7,
         "offset": 21.71,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
-      },
-      {
-        "onset": 21.9,
-        "offset": 21.91,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 22.09,
         "offset": 22.1,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
-      },
-      {
-        "onset": 22.09,
-        "offset": 22.1,
-        "duration": 0.01,
-        "pitch": 37,
-        "instrument": "drums"
-      },
-      {
-        "onset": 22.29,
-        "offset": 22.3,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
-      },
-      {
-        "onset": 22.39,
-        "offset": 22.4,
-        "duration": 0.01,
-        "pitch": 37,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 22.48,
         "offset": 22.49,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
-      },
-      {
-        "onset": 22.68,
-        "offset": 22.69,
-        "duration": 0.01,
-        "pitch": 37,
-        "instrument": "drums"
-      },
-      {
-        "onset": 22.68,
-        "offset": 22.69,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 22.87,
         "offset": 22.88,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
-      },
-      {
-        "onset": 22.87,
-        "offset": 22.88,
-        "duration": 0.01,
-        "pitch": 37,
-        "instrument": "drums"
-      },
-      {
-        "onset": 23.07,
-        "offset": 23.08,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 23.26,
         "offset": 23.27,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
-      },
-      {
-        "onset": 23.45,
-        "offset": 23.46,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 23.65,
         "offset": 23.66,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
-      },
-      {
-        "onset": 23.65,
-        "offset": 23.66,
-        "duration": 0.01,
-        "pitch": 37,
-        "instrument": "drums"
-      },
-      {
-        "onset": 23.84,
-        "offset": 23.85,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
-      },
-      {
-        "onset": 23.94,
-        "offset": 23.95,
-        "duration": 0.01,
-        "pitch": 37,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 24.04,
         "offset": 24.05,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
-      },
-      {
-        "onset": 24.23,
-        "offset": 24.24,
-        "duration": 0.01,
-        "pitch": 37,
-        "instrument": "drums"
-      },
-      {
-        "onset": 24.23,
-        "offset": 24.24,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 24.43,
         "offset": 24.44,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
-      },
-      {
-        "onset": 24.43,
-        "offset": 24.44,
-        "duration": 0.01,
-        "pitch": 37,
-        "instrument": "drums"
-      },
-      {
-        "onset": 24.62,
-        "offset": 24.63,
-        "duration": 0.01,
-        "pitch": 42,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 24.82,
         "offset": 24.83,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 25.2,
         "offset": 25.21,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 25.58,
         "offset": 25.59,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 25.97,
         "offset": 25.98,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 26.35,
         "offset": 26.36,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 26.74,
         "offset": 26.75,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 27.13,
         "offset": 27.14,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 27.52,
         "offset": 27.53,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 27.91,
         "offset": 27.92,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 28.29,
         "offset": 28.3,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 28.68,
         "offset": 28.69,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
+        "pitch": 36
       },
       {
         "onset": 29.07,
         "offset": 29.08,
         "duration": 0.01,
-        "pitch": 36,
-        "instrument": "drums"
+        "pitch": 36
+      }
+    ],
+    "hat": [
+      {
+        "onset": 0.23,
+        "offset": 0.24,
+        "duration": 0.01,
+        "pitch": 44
+      },
+      {
+        "onset": 0.61,
+        "offset": 0.62,
+        "duration": 0.01,
+        "pitch": 44
+      },
+      {
+        "onset": 1.0,
+        "offset": 1.01,
+        "duration": 0.01,
+        "pitch": 44
+      },
+      {
+        "onset": 1.38,
+        "offset": 1.39,
+        "duration": 0.01,
+        "pitch": 44
+      },
+      {
+        "onset": 1.77,
+        "offset": 1.78,
+        "duration": 0.01,
+        "pitch": 44
+      },
+      {
+        "onset": 2.16,
+        "offset": 2.17,
+        "duration": 0.01,
+        "pitch": 44
+      },
+      {
+        "onset": 2.54,
+        "offset": 2.55,
+        "duration": 0.01,
+        "pitch": 44
+      },
+      {
+        "onset": 2.93,
+        "offset": 2.94,
+        "duration": 0.01,
+        "pitch": 44
+      },
+      {
+        "onset": 3.32,
+        "offset": 3.33,
+        "duration": 0.01,
+        "pitch": 44
+      },
+      {
+        "onset": 3.7,
+        "offset": 3.71,
+        "duration": 0.01,
+        "pitch": 44
+      },
+      {
+        "onset": 4.09,
+        "offset": 4.1,
+        "duration": 0.01,
+        "pitch": 44
+      },
+      {
+        "onset": 4.48,
+        "offset": 4.49,
+        "duration": 0.01,
+        "pitch": 44
+      },
+      {
+        "onset": 4.86,
+        "offset": 4.87,
+        "duration": 0.01,
+        "pitch": 44
+      },
+      {
+        "onset": 5.25,
+        "offset": 5.26,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 5.64,
+        "offset": 5.65,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 6.02,
+        "offset": 6.03,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 6.41,
+        "offset": 6.42,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 6.8,
+        "offset": 6.81,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 7.19,
+        "offset": 7.2,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 7.58,
+        "offset": 7.59,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 7.96,
+        "offset": 7.97,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 8.35,
+        "offset": 8.36,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 8.73,
+        "offset": 8.74,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 9.12,
+        "offset": 9.13,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 9.51,
+        "offset": 9.52,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 9.9,
+        "offset": 9.91,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 10.67,
+        "offset": 10.68,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 10.77,
+        "offset": 10.78,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 11.05,
+        "offset": 11.06,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 11.44,
+        "offset": 11.45,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 11.54,
+        "offset": 11.55,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 11.83,
+        "offset": 11.84,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 12.22,
+        "offset": 12.23,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 12.32,
+        "offset": 12.33,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 12.61,
+        "offset": 12.62,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 12.99,
+        "offset": 13.0,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 13.09,
+        "offset": 13.1,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 13.77,
+        "offset": 13.78,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 13.87,
+        "offset": 13.88,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 14.16,
+        "offset": 14.17,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 14.55,
+        "offset": 14.56,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 14.64,
+        "offset": 14.65,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 14.94,
+        "offset": 14.95,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 15.32,
+        "offset": 15.33,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 15.42,
+        "offset": 15.43,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 15.71,
+        "offset": 15.72,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 16.09,
+        "offset": 16.1,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 16.19,
+        "offset": 16.2,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 16.48,
+        "offset": 16.49,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 16.86,
+        "offset": 16.87,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 16.96,
+        "offset": 16.97,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 17.25,
+        "offset": 17.26,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 17.64,
+        "offset": 17.65,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 17.74,
+        "offset": 17.75,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 18.04,
+        "offset": 18.05,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 18.43,
+        "offset": 18.44,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 18.53,
+        "offset": 18.54,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 18.82,
+        "offset": 18.83,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 19.2,
+        "offset": 19.21,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 19.29,
+        "offset": 19.3,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 19.58,
+        "offset": 19.59,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 19.96,
+        "offset": 19.97,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 20.36,
+        "offset": 20.37,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 20.74,
+        "offset": 20.75,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 21.13,
+        "offset": 21.14,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 21.51,
+        "offset": 21.52,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 21.9,
+        "offset": 21.91,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 22.29,
+        "offset": 22.3,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 22.68,
+        "offset": 22.69,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 23.07,
+        "offset": 23.08,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 23.45,
+        "offset": 23.46,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 23.84,
+        "offset": 23.85,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 24.23,
+        "offset": 24.24,
+        "duration": 0.01,
+        "pitch": 42
+      },
+      {
+        "onset": 24.62,
+        "offset": 24.63,
+        "duration": 0.01,
+        "pitch": 42
+      }
+    ],
+    "snare": [
+      {
+        "onset": 6.9,
+        "offset": 6.91,
+        "duration": 0.01,
+        "pitch": 38
+      },
+      {
+        "onset": 7.19,
+        "offset": 7.2,
+        "duration": 0.01,
+        "pitch": 38
+      },
+      {
+        "onset": 7.38,
+        "offset": 7.39,
+        "duration": 0.01,
+        "pitch": 38
+      },
+      {
+        "onset": 8.16,
+        "offset": 8.17,
+        "duration": 0.01,
+        "pitch": 38
+      },
+      {
+        "onset": 8.44,
+        "offset": 8.45,
+        "duration": 0.01,
+        "pitch": 38
+      },
+      {
+        "onset": 8.73,
+        "offset": 8.74,
+        "duration": 0.01,
+        "pitch": 38
+      },
+      {
+        "onset": 8.93,
+        "offset": 8.94,
+        "duration": 0.01,
+        "pitch": 38
+      },
+      {
+        "onset": 9.22,
+        "offset": 9.23,
+        "duration": 0.01,
+        "pitch": 38
+      },
+      {
+        "onset": 9.71,
+        "offset": 9.72,
+        "duration": 0.01,
+        "pitch": 38
+      },
+      {
+        "onset": 10.28,
+        "offset": 10.29,
+        "duration": 0.01,
+        "pitch": 37
+      },
+      {
+        "onset": 10.47,
+        "offset": 10.48,
+        "duration": 0.01,
+        "pitch": 37
+      },
+      {
+        "onset": 11.25,
+        "offset": 11.26,
+        "duration": 0.01,
+        "pitch": 37
+      },
+      {
+        "onset": 12.03,
+        "offset": 12.04,
+        "duration": 0.01,
+        "pitch": 37
+      },
+      {
+        "onset": 12.8,
+        "offset": 12.81,
+        "duration": 0.01,
+        "pitch": 37
+      },
+      {
+        "onset": 13.38,
+        "offset": 13.39,
+        "duration": 0.01,
+        "pitch": 37
+      },
+      {
+        "onset": 13.57,
+        "offset": 13.58,
+        "duration": 0.01,
+        "pitch": 37
+      },
+      {
+        "onset": 14.35,
+        "offset": 14.36,
+        "duration": 0.01,
+        "pitch": 37
+      },
+      {
+        "onset": 15.13,
+        "offset": 15.14,
+        "duration": 0.01,
+        "pitch": 38
+      },
+      {
+        "onset": 15.9,
+        "offset": 15.91,
+        "duration": 0.01,
+        "pitch": 38
+      },
+      {
+        "onset": 16.67,
+        "offset": 16.68,
+        "duration": 0.01,
+        "pitch": 38
+      },
+      {
+        "onset": 17.45,
+        "offset": 17.46,
+        "duration": 0.01,
+        "pitch": 38
+      },
+      {
+        "onset": 18.24,
+        "offset": 18.25,
+        "duration": 0.01,
+        "pitch": 38
+      },
+      {
+        "onset": 19.01,
+        "offset": 19.02,
+        "duration": 0.01,
+        "pitch": 38
+      },
+      {
+        "onset": 19.77,
+        "offset": 19.78,
+        "duration": 0.01,
+        "pitch": 38
+      },
+      {
+        "onset": 20.55,
+        "offset": 20.56,
+        "duration": 0.01,
+        "pitch": 37
+      },
+      {
+        "onset": 20.84,
+        "offset": 20.85,
+        "duration": 0.01,
+        "pitch": 37
+      },
+      {
+        "onset": 21.13,
+        "offset": 21.14,
+        "duration": 0.01,
+        "pitch": 37
+      },
+      {
+        "onset": 21.32,
+        "offset": 21.33,
+        "duration": 0.01,
+        "pitch": 37
+      },
+      {
+        "onset": 22.09,
+        "offset": 22.1,
+        "duration": 0.01,
+        "pitch": 37
+      },
+      {
+        "onset": 22.39,
+        "offset": 22.4,
+        "duration": 0.01,
+        "pitch": 37
+      },
+      {
+        "onset": 22.68,
+        "offset": 22.69,
+        "duration": 0.01,
+        "pitch": 37
+      },
+      {
+        "onset": 22.87,
+        "offset": 22.88,
+        "duration": 0.01,
+        "pitch": 37
+      },
+      {
+        "onset": 23.65,
+        "offset": 23.66,
+        "duration": 0.01,
+        "pitch": 37
+      },
+      {
+        "onset": 23.94,
+        "offset": 23.95,
+        "duration": 0.01,
+        "pitch": 37
+      },
+      {
+        "onset": 24.23,
+        "offset": 24.24,
+        "duration": 0.01,
+        "pitch": 37
+      },
+      {
+        "onset": 24.43,
+        "offset": 24.44,
+        "duration": 0.01,
+        "pitch": 37
       }
     ]
   }

@@ -41,12 +41,16 @@ uniform float4 uRegion2;
 uniform float4 uRegion3;
 uniform float4 uRegion4;
 uniform float4 uRegion5;
+uniform float4 uRegion6;
+uniform float4 uRegion7;
 uniform float4 uMat0;
 uniform float4 uMat1;
 uniform float4 uMat2;
 uniform float4 uMat3;
 uniform float4 uMat4;
 uniform float4 uMat5;
+uniform float4 uMat6;
+uniform float4 uMat7;
 
 const float FLAT_SCALE = 2.0;
 const float LW = 1920.0;
@@ -92,6 +96,8 @@ float4 materialAt(float2 q) {
     m = pick(uRegion3, uMat3, q, m);
     m = pick(uRegion4, uMat4, q, m);
     m = pick(uRegion5, uMat5, q, m);
+    m = pick(uRegion6, uMat6, q, m);
+    m = pick(uRegion7, uMat7, q, m);
     return m;
 }
 

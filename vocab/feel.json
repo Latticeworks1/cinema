@@ -1,4 +1,6 @@
 {
+  "same_onset_s": 0.011,
+  "std_floor": [0.05, 0.05, 0.25, 1.0],
   "window_bars": 1.0,
   "pitch_lo": 24,
   "pitch_hi": 96,

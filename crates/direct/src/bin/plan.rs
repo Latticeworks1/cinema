@@ -1,14 +1,11 @@
-//! Print the scene plan of a track and write it to `out/plan.json`.
-//!
-//! Usage: plan [analysis.json] [vocab dir]
+//! Print the scene plan of the packet named by `CINEMA_PACKET` (default `packets/default.json`)
+//! and write it to the packet's `plan.json`.
 use direct::Plan;
+use packet::Packet;
 
 fn main() {
-    let args: Vec<String> = std::env::args().collect();
-    let analysis = args.get(1).map_or("data/analysis.json", String::as_str);
-    let vocab = args.get(2).map_or("vocab", String::as_str);
-    let plan = match Plan::load(analysis, vocab) {
-        Ok(p) => p,
+    let (packet, plan) = match Packet::from_env().and_then(|p| Plan::from_packet(&p).map(|plan| (p, plan))) {
+        Ok(x) => x,
         Err(e) => {
             eprintln!("plan: {e}");
             std::process::exit(1);
@@ -32,7 +29,10 @@ fn main() {
             s.starts_with
         );
     }
-    std::fs::create_dir_all("out").expect("create out/");
-    std::fs::write("out/plan.json", serde_json::to_string_pretty(&plan.report()).unwrap()).expect("write out/plan.json");
-    println!("\nwrote out/plan.json ({} scenes)", plan.scenes.len());
+    let out = packet.plan_path();
+    std::fs::write(&out, serde_json::to_string_pretty(&plan.report()).unwrap()).unwrap_or_else(|e| {
+        eprintln!("plan: {}: {e}", out.display());
+        std::process::exit(1);
+    });
+    println!("\nwrote {} ({} scenes)", out.display(), plan.scenes.len());
 }

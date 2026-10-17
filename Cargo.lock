@@ -478,6 +478,7 @@ dependencies = [
  "fframes",
  "fframes_native_player",
  "fframes_skia_renderer",
+ "packet",
  "track",
 ]
 
@@ -489,6 +490,7 @@ dependencies = [
  "fframes",
  "fframes_native_player",
  "fframes_skia_renderer",
+ "packet",
  "track",
 ]
 
@@ -781,6 +783,7 @@ checksum = "be1e0bca6c3637f992fc1cc7cbc52a78c1ef6db076dbf1059c4323d6a2048376"
 name = "direct"
 version = "0.1.0"
 dependencies = [
+ "packet",
  "serde",
  "serde_json",
  "signals",
@@ -2386,6 +2389,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "36820e9051aca1014ddc75770aab4d68bc1e9e632f0f5627c4086bc216fb583b"
 dependencies = [
  "ttf-parser 0.25.1",
+]
+
+[[package]]
+name = "packet"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

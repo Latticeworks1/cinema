@@ -8,16 +8,8 @@
 use serde::Deserialize;
 use std::{collections::BTreeMap, fmt, fs, path::Path};
 
-pub const SCHEMA_VERSION: u32 = 1;
+pub const SCHEMA_VERSION: u32 = 2;
 pub const FPS: usize = 30;
-
-/// General MIDI percussion pitches, grouped into the stems the transcription splits apart.
-/// Pitches not listed here become the `perc` stem.
-const DRUM_STEMS: &[(&str, &[u8])] = &[
-    ("kick", &[35, 36]),
-    ("snare", &[37, 38, 39, 40]),
-    ("hat", &[42, 44, 46]),
-];
 
 #[derive(Debug)]
 pub enum TrackError {
@@ -92,6 +84,13 @@ pub struct Chord {
     pub name: String,
 }
 
+/// The loudest frame of the mix: its time in seconds and its level in dBFS.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Loudest {
+    pub t: f32,
+    pub db: f32,
+}
+
 #[derive(Clone, Debug)]
 pub struct Track {
     pub audio_file: String,
@@ -108,6 +107,12 @@ pub struct Track {
     pub stems: Vec<Stem>,
     /// Mixed-signal loudness per video frame, dBFS.
     pub level_db: Vec<f32>,
+    /// Peak amplitude of the mix, 0..1, at `waveform_cols_per_s` columns per second.
+    pub waveform: Vec<f32>,
+    pub waveform_cols_per_s: f32,
+    /// Dominant frequency of each named stem, Hz.
+    pub peaks_hz: BTreeMap<String, f32>,
+    pub loudest: Loudest,
 }
 
 #[derive(Deserialize)]
@@ -144,27 +149,34 @@ struct RawChord {
 }
 
 #[derive(Deserialize)]
+struct RawWaveform {
+    columns_per_second: f32,
+    peaks: Vec<f32>,
+}
+
+#[derive(Deserialize)]
+struct RawLoudest {
+    t: f32,
+    db: f32,
+}
+
+#[derive(Deserialize)]
+struct RawMeasurements {
+    peaks_hz: BTreeMap<String, f32>,
+    loudest: RawLoudest,
+}
+
+#[derive(Deserialize)]
 struct RawAnalysis {
     schema_version: u32,
     source: RawSource,
     tempo: RawTempo,
+    measurements: RawMeasurements,
+    waveform: RawWaveform,
     structure: RawStructure,
     chords: Vec<RawChord>,
     rms_curve_db: Vec<f32>,
-    instruments: BTreeMap<String, Vec<RawNote>>,
-}
-
-/// `electric_bass` -> `bass`, `electric_piano` -> `piano`.
-fn stem_name(instrument: &str) -> String {
-    instrument.strip_prefix("electric_").unwrap_or(instrument).to_string()
-}
-
-fn drum_stem(pitch: u8) -> &'static str {
-    DRUM_STEMS
-        .iter()
-        .find(|(_, pitches)| pitches.contains(&pitch))
-        .map(|(name, _)| *name)
-        .unwrap_or("perc")
+    stems: BTreeMap<String, Vec<RawNote>>,
 }
 
 fn invalid<T>(msg: impl Into<String>) -> Result<T, TrackError> {
@@ -214,6 +226,30 @@ impl Track {
         if !(raw.tempo.bpm > 0.0) {
             return invalid("bpm must be positive");
         }
+        let w = &raw.waveform;
+        if !(w.columns_per_second.is_finite() && w.columns_per_second > 0.0) {
+            return invalid("waveform columns_per_second must be positive");
+        }
+        if w.peaks.iter().any(|v| !v.is_finite() || *v < 0.0) {
+            return invalid("waveform holds a peak that is negative or not finite");
+        }
+        let covered = w.peaks.len() as f32 / w.columns_per_second;
+        if covered < duration_s - 0.2 {
+            return invalid(format!(
+                "waveform covers {covered} s of a {duration_s} s recording"
+            ));
+        }
+        let m = &raw.measurements;
+        if m.peaks_hz.values().any(|v| !(v.is_finite() && *v > 0.0)) {
+            return invalid("every peaks_hz value must be positive");
+        }
+        let loudest = Loudest { t: m.loudest.t, db: m.loudest.db };
+        if !(loudest.t.is_finite() && (0.0..=duration_s).contains(&loudest.t)) {
+            return invalid(format!("loudest time {} is outside the recording", loudest.t));
+        }
+        if !loudest.db.is_finite() {
+            return invalid("loudest level is not finite");
+        }
         let mut chords: Vec<Chord> = raw
             .chords
             .into_iter()
@@ -224,41 +260,28 @@ impl Track {
         }
         chords.shrink_to_fit();
 
-        let mut by_stem: BTreeMap<String, Vec<Note>> = BTreeMap::new();
-        for (instrument, notes) in &raw.instruments {
-            for n in notes {
+        let mut stems: Vec<Stem> = Vec::new();
+        for (name, raw_notes) in &raw.stems {
+            let mut notes = Vec::with_capacity(raw_notes.len());
+            for n in raw_notes {
                 if !(n.onset.is_finite() && n.offset.is_finite())
                     || n.onset < 0.0
                     || n.offset < n.onset
                     || n.offset > duration_s + 0.05
                 {
                     return invalid(format!(
-                        "{instrument} note at {} s (offset {}) is outside the recording",
+                        "{name} note at {} s (offset {}) is outside the recording",
                         n.onset, n.offset
                     ));
                 }
-                let name = if instrument == "drums" {
-                    drum_stem(n.pitch).to_string()
-                } else {
-                    stem_name(instrument)
-                };
-                by_stem.entry(name).or_default().push(Note {
-                    onset: n.onset,
-                    offset: n.offset,
-                    pitch: n.pitch,
-                });
+                notes.push(Note { onset: n.onset, offset: n.offset, pitch: n.pitch });
             }
+            notes.sort_by(|a, b| a.onset.total_cmp(&b.onset));
+            stems.push(Stem { name: name.clone(), notes });
         }
-        if by_stem.is_empty() {
-            return invalid("no instruments");
+        if stems.is_empty() {
+            return invalid("no stems");
         }
-        let stems: Vec<Stem> = by_stem
-            .into_iter()
-            .map(|(name, mut notes)| {
-                notes.sort_by(|a, b| a.onset.total_cmp(&b.onset));
-                Stem { name, notes }
-            })
-            .collect();
 
         Ok(Track {
             audio_file: raw.source.audio_file,
@@ -271,7 +294,16 @@ impl Track {
             chords,
             stems,
             level_db: raw.rms_curve_db,
+            waveform: raw.waveform.peaks,
+            waveform_cols_per_s: raw.waveform.columns_per_second,
+            peaks_hz: raw.measurements.peaks_hz,
+            loudest,
         })
+    }
+
+    /// False for a track made from a transcription alone.
+    pub fn has_audio(&self) -> bool {
+        !self.audio_file.is_empty()
     }
 
     pub fn frames(&self) -> usize {
@@ -311,7 +343,7 @@ mod tests {
 
     fn data() -> Track {
         Track::load(concat!(env!("CARGO_MANIFEST_DIR"), "/../../data/analysis.json"))
-            .expect("data/analysis.json (run tools/analyze.sh)")
+            .expect("data/analysis.json (run tools/render.sh to write it)")
     }
 
     #[test]
@@ -350,11 +382,51 @@ mod tests {
     fn schema_and_length_mismatches_are_refused() {
         let text = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../data/analysis.json"))
             .unwrap();
-        let wrong_version = text.replacen("\"schema_version\": 1", "\"schema_version\": 2", 1);
+        let wrong_version = text.replacen("\"schema_version\": 2", "\"schema_version\": 3", 1);
         assert!(matches!(Track::parse(&wrong_version), Err(TrackError::Invalid(_))));
         let mut v: serde_json::Value = serde_json::from_str(&text).unwrap();
         v["rms_curve_db"].as_array_mut().unwrap().pop();
         assert!(matches!(Track::parse(&v.to_string()), Err(TrackError::Invalid(_))));
+    }
+
+    #[test]
+    fn the_waveform_covers_the_track_and_the_measurements_are_loaded() {
+        let t = data();
+        assert_eq!(t.waveform_cols_per_s, 160.0);
+        assert!(t.waveform.len() as f32 / t.waveform_cols_per_s >= t.duration_s - 0.2);
+        assert!(t.peaks_hz.contains_key("kick") && t.peaks_hz.contains_key("bass"));
+        assert!(t.loudest.t >= 0.0 && t.loudest.t <= t.duration_s);
+    }
+
+    fn mutated(edit: impl FnOnce(&mut serde_json::Value)) -> Result<Track, TrackError> {
+        let text = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../data/analysis.json"))
+            .unwrap();
+        let mut v: serde_json::Value = serde_json::from_str(&text).unwrap();
+        edit(&mut v);
+        Track::parse(&v.to_string())
+    }
+
+    #[test]
+    fn a_malformed_waveform_is_refused() {
+        // Too short: 100 columns at 160 per second is 0.6 s of a 31 s recording.
+        let short = mutated(|v| v["waveform"]["peaks"].as_array_mut().unwrap().truncate(100));
+        assert!(matches!(short, Err(TrackError::Invalid(m)) if m.contains("waveform covers")));
+        let rate = mutated(|v| v["waveform"]["columns_per_second"] = 0.0.into());
+        assert!(matches!(rate, Err(TrackError::Invalid(_))));
+    }
+
+    #[test]
+    fn a_negative_peak_is_refused() {
+        let neg = mutated(|v| v["waveform"]["peaks"][7] = (-0.1).into());
+        assert!(matches!(neg, Err(TrackError::Invalid(m)) if m.contains("peak")));
+    }
+
+    #[test]
+    fn a_non_positive_peak_frequency_or_an_out_of_range_loudest_is_refused() {
+        let hz = mutated(|v| v["measurements"]["peaks_hz"]["kick"] = 0.0.into());
+        assert!(matches!(hz, Err(TrackError::Invalid(_))));
+        let late = mutated(|v| v["measurements"]["loudest"]["t"] = 99.0.into());
+        assert!(matches!(late, Err(TrackError::Invalid(_))));
     }
 
     #[test]

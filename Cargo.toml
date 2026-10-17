@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/track", "crates/signals", "crates/direct", "crates/flat", "crates/lens"]
+members = ["crates/packet", "crates/track", "crates/signals", "crates/direct", "crates/flat", "crates/lens"]
 
 [workspace.package]
 version = "0.1.0"
@@ -14,6 +14,7 @@ serde_json = "1.0"
 fframes = { version = "=1.2.0", features = ["cli", "h264", "libav-agree-gpl"] }
 fframes_skia_renderer = { version = "=1.2.0", features = ["metal"] }
 fframes_native_player = { version = "=1.2.0", default-features = false, features = ["metal", "audio"] }
+packet = { path = "crates/packet" }
 track = { path = "crates/track" }
 signals = { path = "crates/signals" }
 direct = { path = "crates/direct" }

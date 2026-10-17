@@ -1,0 +1,8 @@
+{
+  "name": "default",
+  "inputs": { "audio": "../data/audio.wav", "notes": "../data/notes.json" },
+  "vocab": "../vocab",
+  "media": "../media",
+  "out": "../out",
+  "set": {}
+}

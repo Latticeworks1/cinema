@@ -19,6 +19,10 @@
     { "from": "piano.quiet",    "to": "zoom",       "gain": 0.06, "curve": "smooth" },
     { "from": "master.level",   "to": "bloom",      "gain": 0.30, "curve": "smooth" },
     { "from": "master.level",   "to": "aberration", "gain": 0.15 },
-    { "from": "master.bar_phase", "to": "tilt_y",   "gain": 0.04, "curve": "sine" }
+    { "from": "master.bar_phase", "to": "tilt_y",   "gain": 0.04, "curve": "sine" },
+    { "from": "rhythm.0.pulse", "to": "grain",      "gain": 0.04 },
+    { "from": "rhythm.1.pulse", "to": "bloom",      "gain": 0.06 },
+    { "from": "rhythm.3.phase", "to": "aim_x",      "gain": 18,   "curve": "sine" },
+    { "from": "rhythm.5.phase", "to": "roll",       "gain": 0.03, "curve": "sine" }
   ]
 }

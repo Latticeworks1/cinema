@@ -1,16 +1,7 @@
 use std::{collections::HashMap, fmt, sync::Arc};
+use crate::rhythm::{MAX_OSCILLATORS, Rhythm, RhythmSignal};
+use crate::settings::{BusSettings, SignalSettings};
 use track::{FPS, Stem, Track};
-
-/// Notes whose onsets differ by less than this are one event (a chord).
-const SAME_ONSET_S: f32 = 0.011;
-/// How many notes back the held-note and silence searches look.
-const LOOKBACK: usize = 16;
-/// The smallest and largest decay of a stem's note impulse, seconds.
-const DECAY_MIN_S: f32 = 0.04;
-const DECAY_MAX_S: f32 = 0.6;
-/// Lower and upper percentile of the loudness curve that map to 0 and 1.
-const LEVEL_LO_PCT: f32 = 0.05;
-const LEVEL_HI_PCT: f32 = 0.99;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum StemSignal {
@@ -42,6 +33,8 @@ pub enum MasterSignal {
 pub enum Source {
     Stem(String, StemSignal),
     Master(MasterSignal),
+    /// An inferred rhythmic oscillator, ranked from the shortest period.
+    Rhythm(usize, RhythmSignal),
 }
 
 #[derive(Debug, PartialEq)]
@@ -49,6 +42,7 @@ pub enum SourceError {
     Syntax(String),
     UnknownSignal(String),
     UnknownStem(String),
+    UnknownOscillator(usize),
 }
 
 impl fmt::Display for SourceError {
@@ -57,6 +51,7 @@ impl fmt::Display for SourceError {
             SourceError::Syntax(s) => write!(f, "source `{s}` is not of the form `stem.signal`"),
             SourceError::UnknownSignal(s) => write!(f, "unknown signal in `{s}`"),
             SourceError::UnknownStem(s) => write!(f, "no stem named `{s}` in the track"),
+            SourceError::UnknownOscillator(k) => write!(f, "no oscillator rank {k} (the bus has {MAX_OSCILLATORS})"),
         }
     }
 }
@@ -64,7 +59,7 @@ impl fmt::Display for SourceError {
 impl std::error::Error for SourceError {}
 
 impl Source {
-    /// Parse `kick.hit`, `piano.pitch`, `master.level`. Stem names are checked by [`Bus::check`].
+    /// Parse `kick.hit`, `piano.pitch`, `master.level`, `rhythm.0.pulse`. Stem names are checked by [`Bus::check`].
     pub fn parse(text: &str) -> Result<Source, SourceError> {
         let (head, tail) = text.split_once('.').ok_or_else(|| SourceError::Syntax(text.into()))?;
         if head == "master" {
@@ -75,6 +70,13 @@ impl Source {
                 _ => return Err(SourceError::UnknownSignal(text.into())),
             };
             return Ok(Source::Master(m));
+        }
+        if head == "rhythm" {
+            let syntax = || SourceError::Syntax(text.into());
+            let (rank, sig) = tail.split_once('.').ok_or_else(syntax)?;
+            let rank: usize = rank.parse().map_err(|_| syntax())?;
+            let sig = RhythmSignal::parse(sig).ok_or_else(|| SourceError::UnknownSignal(text.into()))?;
+            return Ok(Source::Rhythm(rank, sig));
         }
         let s = match tail {
             "hit" => StemSignal::Hit,
@@ -101,6 +103,8 @@ pub struct Bus {
     info: HashMap<String, StemInfo>,
     level_lo: f32,
     level_hi: f32,
+    rhythm: Rhythm,
+    cfg: BusSettings,
 }
 
 fn percentile(values: &[f32], p: f32) -> f32 {
@@ -116,13 +120,19 @@ fn onsets_in(stem: &Stem, t0: f32, t1: f32) -> usize {
 }
 
 impl Bus {
+    /// A bus with the settings shipped in `vocab/signals.json`.
     pub fn new(track: Arc<Track>) -> Bus {
+        Bus::with_settings(track, &SignalSettings::shipped())
+    }
+
+    pub fn with_settings(track: Arc<Track>, settings: &SignalSettings) -> Bus {
+        let cfg = settings.bus.clone();
         let info = track
             .stems
             .iter()
             .map(|s| {
                 let (lo, hi) = s.pitch_range();
-                let decay_s = (0.5 * s.median_ioi().unwrap_or(0.5)).clamp(DECAY_MIN_S, DECAY_MAX_S);
+                let decay_s = (0.5 * s.median_ioi().unwrap_or(0.5)).clamp(cfg.decay_min_s, cfg.decay_max_s);
                 let max_density = (0..track.frames())
                     .map(|f| onsets_in(s, f as f32 / FPS as f32 - track.bar_s, f as f32 / FPS as f32))
                     .max()
@@ -131,13 +141,18 @@ impl Bus {
                 (s.name.clone(), StemInfo { decay_s, lo, hi, max_density })
             })
             .collect();
-        let level_lo = percentile(&track.level_db, LEVEL_LO_PCT);
-        let level_hi = percentile(&track.level_db, LEVEL_HI_PCT);
-        Bus { track, info, level_lo, level_hi }
+        let level_lo = percentile(&track.level_db, cfg.level_lo_pct);
+        let level_hi = percentile(&track.level_db, cfg.level_hi_pct);
+        let rhythm = Rhythm::fit(&track, &settings.rhythm);
+        Bus { track, info, level_lo, level_hi, rhythm, cfg }
     }
 
     pub fn track(&self) -> &Track {
         &self.track
+    }
+
+    pub fn rhythm(&self) -> &Rhythm {
+        &self.rhythm
     }
 
     /// Fails when the source names a stem the track does not have.
@@ -146,6 +161,7 @@ impl Bus {
             Source::Stem(name, _) if !self.info.contains_key(name) => {
                 Err(SourceError::UnknownStem(name.clone()))
             }
+            Source::Rhythm(rank, _) if *rank >= MAX_OSCILLATORS => Err(SourceError::UnknownOscillator(*rank)),
             _ => Ok(()),
         }
     }
@@ -165,6 +181,7 @@ impl Bus {
                 None => 0.0,
             },
             Source::Master(m) => self.master_value(*m, t),
+            Source::Rhythm(rank, sig) => self.rhythm.value(*rank, *sig, t),
         }
     }
 
@@ -199,7 +216,7 @@ impl Bus {
                 let held = stem.notes[..=i]
                     .iter()
                     .rev()
-                    .take(LOOKBACK)
+                    .take(self.cfg.lookback)
                     .any(|n| n.onset <= t && t < n.offset);
                 f32::from(held)
             }
@@ -207,7 +224,7 @@ impl Bus {
             StemSignal::Leap => {
                 let group_start = (0..=i)
                     .rev()
-                    .take_while(|&j| last.onset - stem.notes[j].onset < SAME_ONSET_S)
+                    .take_while(|&j| last.onset - stem.notes[j].onset < self.cfg.same_onset_s)
                     .last()
                     .unwrap_or(i);
                 let Some(prev) = group_start.checked_sub(1) else {
@@ -225,7 +242,7 @@ impl Bus {
                 let held = stem.notes[..=i]
                     .iter()
                     .rev()
-                    .take(LOOKBACK)
+                    .take(self.cfg.lookback)
                     .any(|n| n.onset <= t && t < n.offset);
                 if held {
                     return 0.0;
@@ -233,7 +250,7 @@ impl Bus {
                 let end = stem.notes[..=i]
                     .iter()
                     .rev()
-                    .take(LOOKBACK)
+                    .take(self.cfg.lookback)
                     .map(|n| n.offset)
                     .fold(f32::MIN, f32::max);
                 ((t - end) / self.track.bar_s).clamp(0.0, 1.0)
@@ -246,8 +263,8 @@ impl Bus {
         let onset = stem.notes[i].onset;
         stem.notes
             .iter()
-            .skip(i.saturating_sub(LOOKBACK))
-            .filter(|n| (n.onset - onset).abs() < SAME_ONSET_S)
+            .skip(i.saturating_sub(self.cfg.lookback))
+            .filter(|n| (n.onset - onset).abs() < self.cfg.same_onset_s)
             .map(|n| n.pitch)
             .max()
             .unwrap_or(stem.notes[i].pitch)
@@ -283,6 +300,11 @@ mod tests {
         let bus = Bus::new(t.clone());
         assert_eq!(bus.check(&src("tuba.hit")), Err(SourceError::UnknownStem("tuba".into())));
         assert!(bus.check(&src("kick.hit")).is_ok());
+        assert_eq!(src("rhythm.1.pulse"), Source::Rhythm(1, RhythmSignal::Pulse));
+        assert!(bus.check(&src("rhythm.5.amp")).is_ok());
+        assert_eq!(bus.check(&src("rhythm.6.amp")), Err(SourceError::UnknownOscillator(6)));
+        assert!(matches!(Source::parse("rhythm.x.amp"), Err(SourceError::Syntax(_))));
+        assert!(matches!(Source::parse("rhythm.0.beat"), Err(SourceError::UnknownSignal(_))));
     }
 
     #[test]
@@ -326,6 +348,11 @@ mod tests {
         let t = track();
         let bus = Bus::new(t.clone());
         let mut sources = vec![src("master.level"), src("master.bar_phase"), src("master.beat_phase")];
+        for k in 0..MAX_OSCILLATORS {
+            for sig in ["phase", "pulse", "amp", "conf"] {
+                sources.push(src(&format!("rhythm.{k}.{sig}")));
+            }
+        }
         for s in &t.stems {
             for sig in ["hit", "gate", "pitch", "leap", "density", "quiet"] {
                 sources.push(src(&format!("{}.{sig}", s.name)));
@@ -359,6 +386,10 @@ mod tests {
                     .collect(),
             }],
             level_db: vec![-20.0; 120],
+            waveform: vec![],
+            waveform_cols_per_s: 160.0,
+            peaks_hz: std::collections::BTreeMap::new(),
+            loudest: track::Loudest { t: 0.0, db: -20.0 },
         };
         let step = mk(&[60, 62, 72]);
         let bus = Bus::new(Arc::new(step));

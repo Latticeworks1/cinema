@@ -14,5 +14,16 @@
   "cut_flash": [1.0, 0.45, 0.15],
   "lock_frames": 2,
   "outro_fade_s": 0.5,
-  "seed": 1
+  "seed": 1,
+  "font": "JetBrains Mono",
+  "activity_std_floor": 0.5,
+  "attention": { "lead_s": 0.15, "fall_s": 0.4, "notes": 8 },
+  "priority": { "start": 9, "impact": 5, "drop": 4, "phrase": 3, "enter": 2, "exit": 1 },
+  "stage": { "x": 90, "y": 120, "w": 1740, "h": 700, "gap": 12, "lane_emphasis": 2.2, "hero_share": 0.62, "grid_cols": 3, "pad": 14 },
+  "camera": { "stage_slack": 0.9, "max_zoom": 8.0, "safe_x": 0.10, "safe_y": 0.14 },
+  "marks": { "note_h": 18, "note_min_len": 18, "ahead": 0.45, "grid": 0.16, "ring_stagger_s": 0.12 },
+  "tracker": { "trail": 4, "arm": 18, "grow": 8, "hold_s": 0.55, "box_cap": 24, "box_w": 30, "box_h": 18 },
+  "shots": { "beats": 2, "mix": 0.6, "whip_s": 0.18, "zoom": 1.05, "push": 0.1, "tilt": 0.07, "blur": 0.3, "wide": 0.2 },
+  "chrome": {"ruler": true, "waveform": true, "fft": true, "meter": true, "status": true, "band_y": 836, "band_h": 124, "fft_w": 120, "fft_bands": 48, "fft_lo_hz": 40, "fft_hi_hz": 16000, "fft_db_floor": -6, "fft_db_ceil": 48,
+             "band_span_panels": 2.0, "merge_px": 1.6, "meter_floor_db": -48, "meter_ceil_db": 0}
 }

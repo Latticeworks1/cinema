@@ -1,0 +1,1 @@
+{ "extends": "default.json", "name": "check-audio-only", "inputs": { "notes": null }, "transcriber": ["cp", "data/notes.json", "{notes}"] }

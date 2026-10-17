@@ -6,6 +6,7 @@
     { "name": "kick",  "ink": 0.86 },
     { "name": "hat",   "ink": 0.62 }
   ],
+  "default_ink": 0.7,
 
   "shapes": [
     { "name": "shard", "at": { "edge":  0.90, "energy":  0.50 }, "corner": 0.00,

@@ -1,0 +1,1 @@
+{ "extends": "default.json", "name": "check-export-override", "set": { "export": { "tempo": { "bpm_range": [60, 120] } } } }

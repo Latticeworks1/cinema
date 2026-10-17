@@ -1,31 +1,44 @@
 #!/usr/bin/env bash
-# analyze -> plan -> flat pass -> lens pass. Writes out/cinema.mp4 (1920x1080, 30 fps, with audio).
-# Run from anywhere: tools/render.sh
+# packet -> analysis -> plan -> flat pass -> lens pass.
+# Usage: tools/render.sh [packet.json]   (default packets/default.json)
+# Everything is written under <out>/<packet name>/ (see `packet show`).
+# CINEMA_PYTHON selects the interpreter for the analysis (default python3).
 set -euo pipefail
 cd "$(dirname "$0")/.."
-mkdir -p out/pass
+export CINEMA_PACKET="${1:-packets/default.json}"
+mkdir -p out
 
-echo "[1/5] Measuring the recording (data/analysis.json)"
-tools/analyze.sh
+RANGE="${2:-}"
 
 # The flat pass builds its SVG from strings and the lens pass uses typed shader layers. fframes
 # needs `compile-time-svgtree` for the second and cannot have it for the first, so the two
 # binaries are built in separate cargo invocations.
-echo "[2/5] Building"
-cargo build --release -p direct
+echo "[1/5] Building"
+cargo build --release -p packet -p direct
 cargo build --release -p cinema-flat
 cargo build --release -p cinema-lens
+packet() { target_dir=$(cargo metadata --format-version 1 --no-deps | python3 -c 'import json,sys; print(json.load(sys.stdin)["target_directory"])'); "$target_dir/release/packet" "$@"; }
 
-echo "[3/5] Planning scenes (out/plan.json)"
-cargo run --release -q -p direct --bin plan -- data/analysis.json vocab
+echo "[2/5] Preparing inputs from $CINEMA_PACKET"
+packet prepare "$CINEMA_PACKET"
+FLAT=$(packet path "$CINEMA_PACKET" flat)
+VIDEO=$(packet path "$CINEMA_PACKET" video)
 
-cp data/audio.wav out/pass/music.wav
+echo "[3/5] Planning scenes"
+cargo run --release -q -p direct --bin plan
 
-echo "[4/5] Pass 1: the stage, flat (3840x2160)"
-cargo run --release -q -p cinema-flat -- render -o out/pass/flat.mp4
+if [ -n "$RANGE" ]; then
+    echo "[4/5] Pass 1: the stage, flat (3840x2160) [range: $RANGE]"
+    cargo run --release -q -p cinema-flat -- render "$RANGE" -o "$FLAT"
+    OFFSET=$(echo "$RANGE" | sed -E 's/^([0-9.]+).*/\1/')
+    echo "[5/5] Pass 2: the lens [range: $RANGE, offset: ${OFFSET}s]"
+    CINEMA_OFFSET_S="$OFFSET" cargo run --release -q -p cinema-lens -- render "$RANGE" -o "$VIDEO"
+else
+    echo "[4/5] Pass 1: the stage, flat (3840x2160)"
+    cargo run --release -q -p cinema-flat -- render -o "$FLAT"
+    echo "[5/5] Pass 2: the lens"
+    cargo run --release -q -p cinema-lens -- render -o "$VIDEO"
+fi
 
-echo "[5/5] Pass 2: the lens"
-cargo run --release -q -p cinema-lens -- render -o out/cinema.mp4
-
-ffprobe -v error -show_entries stream=codec_type,width,height,nb_frames,duration -of compact out/cinema.mp4
-echo "Render complete: out/cinema.mp4"
+ffprobe -v error -show_entries stream=codec_type,width,height,nb_frames,duration -of compact "$VIDEO"
+echo "Render complete: $VIDEO"

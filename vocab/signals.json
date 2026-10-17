@@ -1,0 +1,28 @@
+{
+  "bus": {
+    "same_onset_s": 0.011,
+    "lookback": 16,
+    "decay_min_s": 0.04,
+    "decay_max_s": 0.6,
+    "level_lo_pct": 0.05,
+    "level_hi_pct": 0.99
+  },
+  "rhythm": {
+    "same_onset_s": 0.011,
+    "bin_s": 0.01,
+    "min_lag_s": 0.06,
+    "min_cycles": 4.0,
+    "surrogates": 200,
+    "jitter_s": 0.05,
+    "alpha": 0.05,
+    "harmonics": 4,
+    "template_bins": 256,
+    "window_cycles": 4.0,
+    "min_window_s": 1.0,
+    "min_events": 16,
+    "refine_span_s": 0.015,
+    "refine_step_s": 0.0005,
+    "period_tol": 0.02,
+    "seed": 104372259328485
+  }
+}

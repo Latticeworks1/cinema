@@ -6,13 +6,11 @@
 
 use crate::geometry::{H, Rect, W, ease_in_out, ease_out, lerp, wander};
 use crate::scenes::Direction;
+use crate::settings::CameraLimits;
 use crate::vocab::BehaviorKind;
 
 /// Must match `FOCAL` in lens.sksl.
 pub const FOCAL: f32 = 1.7;
-/// Slack before the view may leave the stage when tilted: the share of the half-view kept inside.
-const STAGE_SLACK: f32 = 0.9;
-const MAX_ZOOM: f32 = 8.0;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Camera {
@@ -87,23 +85,19 @@ pub fn behave(kind: BehaviorKind, s: &Setting, d: &Direction) -> Camera {
 }
 
 /// Keep the view inside the stage so a long move never shows the black beyond the screen.
-pub fn keep_in_stage(c: &mut Camera) {
-    c.zoom = c.zoom.clamp(1.0, MAX_ZOOM);
-    let (hx, hy) = (W * 0.5 / c.zoom * STAGE_SLACK, H * 0.5 / c.zoom * STAGE_SLACK);
+pub fn keep_in_stage(c: &mut Camera, lim: &CameraLimits) {
+    c.zoom = c.zoom.clamp(1.0, lim.max_zoom);
+    let (hx, hy) = (W * 0.5 / c.zoom * lim.stage_slack, H * 0.5 / c.zoom * lim.stage_slack);
     c.aim.0 = c.aim.0.clamp(hx, W - hx);
     c.aim.1 = c.aim.1.clamp(hy, H - hy);
 }
 
-/// Margins, as shares of the frame, inside which the subject of attention must stay.
-const SAFE_X: f32 = 0.10;
-const SAFE_Y: f32 = 0.14;
-
 /// Shift the aim just far enough that `point` projects inside the safe area of the frame.
 /// Two passes absorb the small error that tilt and roll add to the first estimate.
-pub fn keep_in_view(c: &mut Camera, point: (f32, f32)) {
+pub fn keep_in_view(c: &mut Camera, point: (f32, f32), lim: &CameraLimits) {
     for _ in 0..2 {
         let Some(p) = project(c, point, W, H) else { return };
-        let (lo_x, hi_x, lo_y, hi_y) = (W * SAFE_X, W * (1.0 - SAFE_X), H * SAFE_Y, H * (1.0 - SAFE_Y));
+        let (lo_x, hi_x, lo_y, hi_y) = (W * lim.safe_x, W * (1.0 - lim.safe_x), H * lim.safe_y, H * (1.0 - lim.safe_y));
         let (dx, dy) = (p.0.clamp(lo_x, hi_x) - p.0, p.1.clamp(lo_y, hi_y) - p.1);
         // One logical pixel is `zoom` output pixels at the aim.
         c.aim.0 -= dx / c.zoom;
@@ -213,20 +207,20 @@ mod tests {
     fn keep_in_view_brings_a_point_inside_the_safe_area_and_leaves_one_already_there() {
         let mut c = Camera { aim: (960.0, 540.0), zoom: 2.0, tilt_x: 0.1, tilt_y: -0.1, roll: 0.0, blur: 0.0 };
         let before = c;
-        keep_in_view(&mut c, (960.0, 540.0));
+        keep_in_view(&mut c, (960.0, 540.0), &dir().camera);
         assert_eq!(c, before);
-        keep_in_view(&mut c, (960.0, 120.0));
+        keep_in_view(&mut c, (960.0, 120.0), &dir().camera);
         let p = project(&c, (960.0, 120.0), W, H).unwrap();
-        assert!(p.1 >= H * SAFE_Y - 2.0 && p.1 <= H * (1.0 - SAFE_Y) + 2.0, "{p:?}");
+        assert!(p.1 >= H * dir().camera.safe_y - 2.0 && p.1 <= H * (1.0 - dir().camera.safe_y) + 2.0, "{p:?}");
     }
 
     #[test]
     fn keep_in_stage_clamps_the_view() {
         let mut c = Camera { aim: (5.0, 5.0), zoom: 3.0, tilt_x: 0.0, tilt_y: 0.0, roll: 0.0, blur: 0.0 };
-        keep_in_stage(&mut c);
+        keep_in_stage(&mut c, &dir().camera);
         assert!(c.aim.0 >= W / 6.0 * 0.9 - 1e-3 && c.aim.1 >= H / 6.0 * 0.9 - 1e-3);
         c.zoom = 99.0;
-        keep_in_stage(&mut c);
-        assert_eq!(c.zoom, MAX_ZOOM);
+        keep_in_stage(&mut c, &dir().camera);
+        assert_eq!(c.zoom, dir().camera.max_zoom);
     }
 }

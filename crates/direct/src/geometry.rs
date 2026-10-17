@@ -41,6 +41,15 @@ impl Rect {
     pub fn contains(&self, p: (f32, f32)) -> bool {
         p.0 >= self.x && p.0 <= self.right() && p.1 >= self.y && p.1 <= self.bottom()
     }
+
+    pub fn lerp(a: Rect, b: Rect, u: f32) -> Rect {
+        Rect {
+            x: lerp(a.x, b.x, u),
+            y: lerp(a.y, b.y, u),
+            w: lerp(a.w, b.w, u),
+            h: lerp(a.h, b.h, u),
+        }
+    }
 }
 
 pub fn lerp(a: f32, b: f32, u: f32) -> f32 {

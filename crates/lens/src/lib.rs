@@ -14,8 +14,7 @@ use fframes::{
 
 pub const WIDTH: usize = 1920;
 pub const HEIGHT: usize = 1080;
-/// Panels with their own display material in one frame; must match the uniforms in lens.sksl.
-pub const MAX_REGIONS: usize = 6;
+pub const MAX_REGIONS: usize = 8;
 
 pub struct LensVideo {
     plan: Plan,
@@ -24,11 +23,6 @@ pub struct LensVideo {
 
 impl LensVideo {
     pub fn new(plan: Plan) -> Self {
-        assert!(
-            plan.vocab.stems.len() <= MAX_REGIONS,
-            "the shader has {MAX_REGIONS} region slots and the vocabulary lists {} stems",
-            plan.vocab.stems.len()
-        );
         Self { plan, shader: Shader::sksl(include_str!("../shaders/lens.sksl")) }
     }
 
@@ -100,12 +94,17 @@ impl Video for LensVideo {
     }
 
     fn audio(&self) -> AudioMap<'_> {
-        AudioMap::from([AudioTrack::new("music.wav", Second(0.)..Eof)])
+        if self.plan.track().has_audio() {
+            AudioMap::from([AudioTrack::new("music.wav", Second(0.)..Eof)])
+        } else {
+            AudioMap::none()
+        }
     }
 
     fn render_frame<'a>(&'a self, frame: Frame, ctx: &FFramesContext<'a, '_>) -> Svgr<'a> {
         let s = self.plan.frame(frame.index);
-        let input = SyncVideoFrameInput { start_from: 0.0, looping: false, editor_fallback_image: None };
+        let offset: f32 = std::env::var("CINEMA_OFFSET_S").ok().and_then(|v| v.parse().ok()).unwrap_or(0.0);
+        let input = SyncVideoFrameInput { start_from: offset, looping: false, editor_fallback_image: None };
         // A root without <svg> makes a full render hang instead of failing (fframes 1.2.0),
         // so a missing frame draws black.
         let Some(flat) = frame.get_synced_video_frame(ctx, "flat.mp4", &input) else {

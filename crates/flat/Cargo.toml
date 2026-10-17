@@ -8,6 +8,7 @@ publish.workspace = true
 
 [dependencies]
 direct = { workspace = true }
+packet = { workspace = true }
 track = { workspace = true }
 fframes = { workspace = true }
 fframes_skia_renderer = { workspace = true }

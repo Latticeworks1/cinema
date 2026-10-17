@@ -1,0 +1,15 @@
+[package]
+name = "packet"
+description = "The project packet: one file that names a run's inputs (audio, transcription or both) and carries its configuration."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[[bin]]
+name = "packet"
+path = "src/main.rs"

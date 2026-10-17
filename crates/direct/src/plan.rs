@@ -4,13 +4,14 @@
 //! frame falls in, adds the matrix's music-driven motion, resolves the look and palette, and
 //! lists the display material of each panel.
 
-use crate::camera::{Camera, Setting, behave, keep_in_stage, keep_in_view};
-use crate::geometry::{Rect, lerp, smoothstep};
+use crate::camera::{Camera, Setting, behave, fit_zoom, keep_in_stage, keep_in_view};
+use crate::geometry::{Rect, ease_in_out, ease_out, lerp, rnd, smoothstep};
 use crate::layout::{Layout, Panel, Timeline};
 use crate::matrix::{Matrix, Param};
 use crate::scenes::{Direction, Scene, derive};
 use crate::vocab::{Framing, Vocabulary};
-use signals::{Bus, FeelModel, FeelSettings};
+use packet::{Packet, Section};
+use signals::{Bus, FeelModel, FeelSettings, SignalSettings};
 use std::{fs, path::Path, sync::Arc};
 use track::{FPS, Stem, Track};
 
@@ -19,6 +20,7 @@ pub struct Sources<'a> {
     pub vocabulary: &'a str,
     pub matrix: &'a str,
     pub direction: &'a str,
+    pub signals: &'a str,
 }
 
 pub struct Plan {
@@ -71,13 +73,8 @@ pub struct FrameState {
     pub emit: f32,
     pub regions: Vec<Region>,
     pub screen_material: usize,
+    pub panels: Vec<Panel>,
 }
-
-/// How far ahead of a note's onset the camera starts to turn towards it, seconds.
-const ATTENTION_LEAD_S: f32 = 0.15;
-/// How long after its onset a note keeps pulling the camera, seconds.
-const ATTENTION_FALL_S: f32 = 0.4;
-const ATTENTION_NOTES: usize = 8;
 
 /// Register of `pitch` inside the stem's own range, 0 lowest and 1 highest.
 pub fn register(stem: &Stem, pitch: u8) -> f32 {
@@ -91,10 +88,23 @@ impl Plan {
     pub fn load(analysis: impl AsRef<Path>, vocab_dir: impl AsRef<Path>) -> Result<Plan, String> {
         let dir = vocab_dir.as_ref();
         let read = |name: &str| fs::read_to_string(dir.join(name)).map_err(|e| format!("{}: {e}", dir.join(name).display()));
-        let (feel, vocabulary, matrix, direction) =
-            (read("feel.json")?, read("vocabulary.json")?, read("matrix.json")?, read("direction.json")?);
+        let (feel, vocabulary, matrix, direction, signals) =
+            (read("feel.json")?, read("vocabulary.json")?, read("matrix.json")?, read("direction.json")?, read("signals.json")?);
         let track = Track::load(analysis).map_err(|e| e.to_string())?;
-        Plan::build(track, &Sources { feel: &feel, vocabulary: &vocabulary, matrix: &matrix, direction: &direction })
+        Plan::build(track, &Sources { feel: &feel, vocabulary: &vocabulary, matrix: &matrix, direction: &direction, signals: &signals })
+    }
+
+    /// Read the packet's analysis and its authored files, with the packet's overrides applied.
+    pub fn from_packet(p: &Packet) -> Result<Plan, String> {
+        let track = Track::load(p.analysis_path()).map_err(|e| e.to_string())?;
+        let (feel, vocabulary, matrix, direction, signals) = (
+            p.section(Section::Feel)?,
+            p.section(Section::Vocabulary)?,
+            p.section(Section::Matrix)?,
+            p.section(Section::Direction)?,
+            p.section(Section::Signals)?,
+        );
+        Plan::build(track, &Sources { feel: &feel, vocabulary: &vocabulary, matrix: &matrix, direction: &direction, signals: &signals })
     }
 
     pub fn build(track: Track, src: &Sources) -> Result<Plan, String> {
@@ -110,11 +120,11 @@ impl Plan {
             .iter()
             .map(|s| {
                 let def = &vocab.layouts[s.layout];
-                Layout::arrange(def.rule, def.slider, &present, &s.dominant)
+                Layout::arrange(def.rule, def.slider, &present, &s.dominant, &dir.stage)
             })
             .collect();
         let timeline = Timeline { span_s: dir.panel_span_s, now_frac: dir.now_frac };
-        let bus = Bus::new(track.clone());
+        let bus = Bus::with_settings(track.clone(), &SignalSettings::from_json(src.signals)?);
         Ok(Plan { track, bus, vocab, matrix, dir, timeline, scenes, layouts })
     }
 
@@ -142,6 +152,40 @@ impl Plan {
         }
     }
 
+    /// Morphs panels smoothly from the previous scene's layout during scene transitions.
+    pub fn morphed_panels(&self, si: usize, t: f32) -> Vec<Panel> {
+        let cur = &self.layouts[si];
+        if si == 0 {
+            return cur.panels.clone();
+        }
+        let scene = &self.scenes[si];
+        let morph_s = self.dir.whip_s.max(0.35);
+        let u = smoothstep((t - scene.t0) / morph_s);
+        if u >= 1.0 {
+            return cur.panels.clone();
+        }
+        let prev = &self.layouts[si - 1];
+        cur.panels
+            .iter()
+            .map(|p| {
+                if let Some(pp) = prev.panels.iter().find(|pp| pp.stem == p.stem) {
+                    Panel {
+                        stem: p.stem.clone(),
+                        rect: Rect::lerp(pp.rect, p.rect, u),
+                        pad: lerp(pp.pad, p.pad, u),
+                    }
+                } else {
+                    let inset = p.rect.inset(p.rect.w.min(p.rect.h) * 0.25 * (1.0 - u));
+                    Panel {
+                        stem: p.stem.clone(),
+                        rect: inset,
+                        pad: p.pad,
+                    }
+                }
+            })
+            .collect()
+    }
+
     /// Where the newest note of `stem` sits in its panel at time `t`.
     pub fn newest_note_pos(&self, scene: usize, stem: &str, t: f32) -> Option<(f32, f32)> {
         let s = self.track.stem(stem)?;
@@ -151,17 +195,17 @@ impl Plan {
     }
 
     /// A smooth point of attention on `stem`: its recent notes blended, each fading in over the
-    /// `ATTENTION_LEAD_S` before its onset and out over `ATTENTION_FALL_S` after it, so the camera
+    /// `self.dir.attention.lead_s` before its onset and out over `self.dir.attention.fall_s` after it, so the camera
     /// and the focus plane glide to a note instead of snapping.
     pub fn attention(&self, scene: usize, stem: &str, t: f32) -> Option<(f32, f32)> {
         let s = self.track.stem(stem)?;
         let panel = self.layouts[scene].panel(stem)?;
         let slider = self.layouts[scene].slider;
-        let last = s.last_onset_at(t + ATTENTION_LEAD_S)?;
+        let last = s.last_onset_at(t + self.dir.attention.lead_s)?;
         let (mut sum, mut wsum) = ((0.0, 0.0), 0.0);
-        for n in s.notes[..=last].iter().rev().take(ATTENTION_NOTES) {
-            let arrive = smoothstep((t + ATTENTION_LEAD_S - n.onset) / ATTENTION_LEAD_S);
-            let w = arrive * (-(t - n.onset).max(0.0) / ATTENTION_FALL_S).exp();
+        for n in s.notes[..=last].iter().rev().take(self.dir.attention.notes) {
+            let arrive = smoothstep((t + self.dir.attention.lead_s - n.onset) / self.dir.attention.lead_s);
+            let w = arrive * (-(t - n.onset).max(0.0) / self.dir.attention.fall_s).exp();
             let q = panel.note_pos(slider, &self.timeline, t, n.onset, register(s, n.pitch));
             sum = (sum.0 + w * q.0, sum.1 + w * q.1);
             wsum += w;
@@ -178,6 +222,53 @@ impl Plan {
         })
     }
 
+    /// Centre, zoom and tilt direction of shot `k` in scene `si`: a panel (or the whole stage)
+    /// picked by keyed noise so any frame can be evaluated alone.
+    fn shot_target(&self, si: usize, k: i64) -> ((f32, f32), f32, f32) {
+        let sh = &self.dir.shots;
+        let panels = &self.layouts[si].panels;
+        let key = k as u64;
+        let wide = panels.is_empty() || rnd(self.dir.seed, 7001, key) < sh.wide;
+        let rect = if wide { Rect::SCREEN } else { panels[(rnd(self.dir.seed, 7002, key) * panels.len() as f32) as usize % panels.len()].rect };
+        let zoom = if wide { 1.0 } else { fit_zoom(rect, self.dir.fit).max(1.0) * sh.zoom };
+        let sign = if rnd(self.dir.seed, 7003, key) < 0.5 { -1.0 } else { 1.0 };
+        (rect.center(), zoom, sign)
+    }
+
+    /// Blend the scene's behaviour with the shot layer after the drop.
+    fn shot(&self, si: usize, t: f32, base: Camera) -> Camera {
+        let sh = &self.dir.shots;
+        if sh.mix <= 0.0 || t < self.track.drop_t {
+            return base;
+        }
+        let len = sh.beats * 60.0 / self.track.bpm;
+        let k = ((t - self.track.drop_t) / len).floor() as i64;
+        let a = t - (self.track.drop_t + k as f32 * len);
+        let u = (a / len).clamp(0.0, 1.0);
+        let (c, z, sign) = self.shot_target(si, k);
+        let (pc, pz, _) = self.shot_target(si, k - 1);
+        let w = (a / sh.whip_s).clamp(0.0, 1.0);
+        let e = ease_out(w);
+        let push = 1.0 + sh.push * u;
+        let shot = Camera {
+            aim: (lerp(pc.0, c.0, e), lerp(pc.1, c.1, e)),
+            zoom: lerp(pz * (1.0 + sh.push), z * push, e),
+            tilt_x: sh.tilt * sign * (w * std::f32::consts::PI).sin(),
+            tilt_y: 0.0,
+            roll: 0.5 * sh.tilt * sign * (w * std::f32::consts::PI).sin(),
+            blur: sh.blur * (w * std::f32::consts::PI).sin(),
+        };
+        let m = sh.mix;
+        Camera {
+            aim: (lerp(base.aim.0, shot.aim.0, m), lerp(base.aim.1, shot.aim.1, m)),
+            zoom: lerp(base.zoom, shot.zoom, m),
+            tilt_x: base.tilt_x + shot.tilt_x * m,
+            tilt_y: base.tilt_y,
+            roll: base.roll + shot.roll * m,
+            blur: base.blur.max(shot.blur * m),
+        }
+    }
+
     pub fn frame(&self, index: usize) -> FrameState {
         let t = index as f32 / FPS as f32;
         let si = self.scene_at(t);
@@ -191,16 +282,66 @@ impl Plan {
         let from = if si > 0 { self.subject(si - 1).center() } else { subject.center() };
         let follow = self.attention(si, &scene.dominant, t).unwrap_or(subject.center());
         let phrase = self.dir.phrase_bars as f32 * self.track.bar_s;
+        let phrase_phase = ((t - self.track.drop_t) / phrase).rem_euclid(1.0);
         let setting = Setting {
             subject,
             from,
             age: t - scene.t0,
             length: scene.duration(),
-            phrase_phase: ((t - self.track.drop_t) / phrase).rem_euclid(1.0),
+            phrase_phase,
             follow,
             scene_index: si,
         };
         let mut cam = behave(self.vocab.behaviors[scene.behavior].kind, &setting, &self.dir);
+        cam = self.shot(si, t, cam);
+
+        // Pre-drop cinematic arc
+        if t < self.track.drop_t {
+            let drop_t = self.track.drop_t.max(0.1);
+            let u_pre = (t / drop_t).clamp(0.0, 1.0);
+            let arc_phi = u_pre * std::f32::consts::PI;
+            cam.roll += 0.02 * arc_phi.sin();
+            cam.tilt_y += 0.035 * (1.0 - u_pre);
+            cam.tilt_x += 0.015 * (arc_phi * 2.0).sin();
+            cam.zoom *= 0.88 + 0.12 * ease_in_out(u_pre);
+            let bar_s = self.track.bar_s;
+            if t > drop_t - bar_s {
+                let riser = ((t - (drop_t - bar_s)) / bar_s).clamp(0.0, 1.0);
+                cam.zoom *= 1.0 + 0.08 * riser * riser;
+                cam.blur = cam.blur.max(0.3 * riser);
+            }
+        }
+
+        // Phrase-start stutter: rapid rhythmic camera micro-oscillation on the 1 of every phrase
+        let time_in_phrase = phrase_phase * phrase;
+        let stutter_s = 0.14;
+        let mut stutter_tear = 0.0;
+        let mut stutter_punch = 0.0;
+        if t >= self.track.drop_t && time_in_phrase < stutter_s {
+            let stutter_u = 1.0 - (time_in_phrase / stutter_s);
+            let stutter_osc = (time_in_phrase * 48.0 * std::f32::consts::TAU).sin();
+            cam.aim.0 += stutter_osc * 10.0 * stutter_u;
+            cam.aim.1 += (time_in_phrase * 64.0 * std::f32::consts::TAU).cos() * 6.0 * stutter_u;
+            cam.zoom *= 1.0 + stutter_osc * 0.025 * stutter_u;
+            cam.roll += stutter_osc * 0.012 * stutter_u;
+            stutter_tear = stutter_u * 0.25 * if (index % 2) == 0 { 1.0 } else { 0.0 };
+            stutter_punch = stutter_u * 0.15;
+        }
+
+        // Zoom-out ending: pull back smoothly to frame the entire stage after impact
+        let ending_t0 = self.track.impact_t.min(self.track.duration_s - 2.5 * self.track.bar_s).max(0.0);
+        if t > ending_t0 {
+            let u_ending = ease_in_out(((t - ending_t0) / (self.track.duration_s - ending_t0)).clamp(0.0, 1.0));
+            let stage_center = self.dir.stage.rect().center();
+            let wide_zoom = fit_zoom(self.dir.stage.rect(), self.dir.fit);
+            cam.zoom = lerp(cam.zoom, wide_zoom, u_ending * 0.75);
+            cam.aim.0 = lerp(cam.aim.0, stage_center.0, u_ending * 0.75);
+            cam.aim.1 = lerp(cam.aim.1, stage_center.1, u_ending * 0.75);
+            cam.tilt_x *= 1.0 - u_ending * 0.6;
+            cam.tilt_y *= 1.0 - u_ending * 0.6;
+            cam.roll *= 1.0 - u_ending * 0.7;
+        }
+
         let whip = cam.blur;
         cam.zoom *= 1.0 + moved(Param::Zoom);
         cam.aim.0 += moved(Param::AimX);
@@ -208,13 +349,25 @@ impl Plan {
         cam.tilt_x += moved(Param::TiltX);
         cam.tilt_y += moved(Param::TiltY);
         cam.roll += moved(Param::Roll);
-        keep_in_view(&mut cam, follow);
-        keep_in_stage(&mut cam);
+        keep_in_view(&mut cam, follow, &self.dir.camera);
+        keep_in_stage(&mut cam, &self.dir.camera);
 
         let since_start = index as isize - (scene.t0 * FPS as f32).round() as isize;
         let flash = if (0..3).contains(&since_start) { self.dir.cut_flash[since_start as usize] } else { 0.0 };
         let impact = (-(t - self.track.impact_t).max(0.0) / 0.18).exp() * f32::from(t >= self.track.impact_t);
         let fade = self.dir.outro_fade_s;
+
+        // Shot transient kicks (rapid micro-cut kicks from ff-tracking)
+        let shot_kick = if t >= self.track.drop_t && self.dir.shots.mix > 0.0 {
+            let len = self.dir.shots.beats * 60.0 / self.track.bpm;
+            let a = (t - self.track.drop_t).rem_euclid(len);
+            if a < 0.07 { (1.0 - a / 0.07) * 0.4 } else { 0.0 }
+        } else {
+            0.0
+        };
+        let is_locked = self.locked(si, index);
+        let lock_tear = if is_locked { 0.45 } else { 0.0 };
+        let lock_aberr = if is_locked { 0.35 } else { 0.0 };
 
         let stops = {
             let cur = self.vocab.palettes[scene.palette].stops;
@@ -227,8 +380,8 @@ impl Plan {
             }
         };
 
-        let regions = self.layouts[si]
-            .panels
+        let panels = self.morphed_panels(si, t);
+        let regions = panels
             .iter()
             .map(|p| Region {
                 stem: p.stem.clone(),
@@ -246,21 +399,22 @@ impl Plan {
             look: LookState {
                 bloom: value(Param::Bloom).clamp(0.0, 1.5),
                 led: value(Param::Led).clamp(0.0, 1.0),
-                aberration: value(Param::Aberration).clamp(0.0, 1.5),
+                aberration: (value(Param::Aberration) + lock_aberr).clamp(0.0, 1.5),
                 grain: value(Param::Grain).clamp(0.0, 1.0),
                 vignette: value(Param::Vignette).clamp(0.0, 1.0),
                 blur: (value(Param::Blur) + whip).clamp(0.0, 2.0),
-                tear: value(Param::Tear).clamp(0.0, 1.5),
-                punch: value(Param::Punch).clamp(0.0, 1.5),
-                cut: flash.max(impact),
+                tear: (value(Param::Tear) + stutter_tear + shot_kick * 0.7 + lock_tear).clamp(0.0, 1.5),
+                punch: (value(Param::Punch) + stutter_punch + shot_kick * 0.4).clamp(0.0, 1.5),
+                cut: flash.max(impact).max(shot_kick),
                 out: ((t - (self.track.duration_s - fade)) / fade).clamp(0.0, 1.0),
-                lock: self.locked(si, index),
+                lock: is_locked,
             },
             stops,
             pulse: moved(Param::Pulse).max(0.0),
             emit: (1.0 + m[Param::Emit.index()]).clamp(0.2, 3.0),
             regions,
             screen_material: scene.screen_material,
+            panels,
         }
     }
 
@@ -279,6 +433,7 @@ impl Plan {
                 "screen_material": v.materials[s.screen_material].name,
                 "shapes": v.stems.iter().zip(&s.shape_by_stem).map(|(d, i)| (d.name.clone(), v.shapes[*i].name.clone())).collect::<std::collections::BTreeMap<_, _>>(),
                 "materials": v.stems.iter().zip(&s.material_by_stem).map(|(d, i)| (d.name.clone(), v.materials[*i].name.clone())).collect::<std::collections::BTreeMap<_, _>>(),
+                "text": s.text,
             })).collect::<Vec<_>>(),
         })
     }
@@ -351,7 +506,7 @@ mod tests {
         let text = |n: &str| std::fs::read_to_string(format!("{root}/vocab/{n}.json")).unwrap();
         let muted = Plan::build(
             full.track().without_stem("piano"),
-            &Sources { feel: &text("feel"), vocabulary: &text("vocabulary"), matrix: &text("matrix"), direction: &text("direction") },
+            &Sources { feel: &text("feel"), vocabulary: &text("vocabulary"), matrix: &text("matrix"), direction: &text("direction"), signals: &text("signals") },
         )
         .unwrap();
         assert!(muted.layouts.iter().all(|l| l.panel("piano").is_none()));
@@ -359,5 +514,31 @@ mod tests {
         let note = full.track().stem("piano").unwrap().notes[20];
         let f = (note.onset * FPS as f32).round() as usize;
         assert!(full.frame(f).pulse > muted.frame(f).pulse || full.frame(f).look.bloom > muted.frame(f).look.bloom);
+    }
+
+    #[test]
+    fn layout_morphing_interpolates_smoothly() {
+        let p = plan();
+        let s1 = &p.scenes[1];
+        let t0 = s1.t0;
+        let p_start = p.morphed_panels(1, t0);
+        let p_mid = p.morphed_panels(1, t0 + 0.15);
+        let p_end = p.morphed_panels(1, t0 + 0.5);
+        assert_eq!(p_start[0].rect, p.layouts[0].panels[0].rect);
+        assert_eq!(p_end[0].rect, p.layouts[1].panels[0].rect);
+        assert!(p_mid[0].rect.x >= p_start[0].rect.x.min(p_end[0].rect.x));
+        assert!(p_mid[0].rect.x <= p_start[0].rect.x.max(p_end[0].rect.x));
+    }
+
+    #[test]
+    fn predrop_arc_and_zoom_out_ending() {
+        let p = plan();
+        let f0 = p.frame(0);
+        let f_pre = p.frame((p.track().drop_t * 0.5 * FPS as f32).round() as usize);
+        assert!(f0.camera.tilt_y > 0.0);
+        assert!(f_pre.camera.roll != 0.0);
+        let f_last = p.frame(p.frames() - 1);
+        let stage_center = p.dir.stage.rect().center();
+        assert!((f_last.camera.aim.0 - stage_center.0).abs() < 100.0);
     }
 }

@@ -1,40 +1,36 @@
+use crate::chrome;
 use direct::{EmitKind, FrameState, Panel, Plan, Slider, register};
 use std::fmt::Write;
 use track::{FPS, Stem, note_name};
 
 const SCALE: f32 = 2.0;
-const MONO: &str = "JetBrains Mono";
 const RED: &str = "#ff0000";
-/// Thickness of a note mark in logical pixels.
-const NOTE_H: f32 = 18.0;
-/// Shortest drawn length of a note mark.
-const NOTE_MIN_LEN: f32 = 18.0;
-/// Brightness of marks still to come and of the grid, relative to the stem's ink.
-const AHEAD: f32 = 0.45;
-const GRID: f32 = 0.16;
-/// Delay between the rings of one emitter, seconds.
-const RING_STAGGER_S: f32 = 0.12;
 const EMIT_STREAM: u64 = 20;
 
-fn gray(v: f32) -> String {
+pub(crate) fn gray(v: f32) -> String {
     let c = (v.clamp(0.0, 1.0) * 255.0).round() as u8;
     format!("#{c:02x}{c:02x}{c:02x}")
 }
 
-pub fn artwork(plan: &Plan, index: usize) -> String {
+/// One frame as SVG. `bands` is the spectrum of the soundtrack at this frame, when there is one;
+/// the spectrum strip is drawn only when it is given and the flags and the track allow it.
+pub fn artwork(plan: &Plan, index: usize, bands: Option<&[f32]>) -> String {
     let st = plan.frame(index);
+    let mono = &plan.dir.font;
     let mut s = String::with_capacity(48_000);
     write!(
         s,
-        "<svg xmlns='http://www.w3.org/2000/svg' width='{}' height='{}'><rect width='100%' height='100%' fill='#000000'/><g transform='scale({SCALE})' font-family='{MONO}'>",
+        "<svg xmlns='http://www.w3.org/2000/svg' width='{}' height='{}'><rect width='100%' height='100%' fill='#000000'/><g transform='scale({SCALE})' font-family='{mono}'>",
         super::WIDTH,
         super::HEIGHT
     )
     .unwrap();
-    for panel in &plan.layouts[st.scene].panels {
+    chrome::header(&mut s, plan, &st);
+    chrome::band(&mut s, plan, &st, bands);
+    for panel in &st.panels {
         draw_panel(&mut s, plan, &st, panel);
     }
-    chrome(&mut s, plan, &st);
+    chrome::caption(&mut s, plan, &st);
     if st.look.lock {
         lock_marker(&mut s, plan, &st);
     }
@@ -86,8 +82,8 @@ fn draw_panel(s: &mut String, plan: &Plan, st: &FrameState, panel: &Panel) {
         }
         let ahead = n.onset > st.t;
         let sounding = n.onset <= st.t && st.t < n.offset.max(n.onset + 0.06);
-        let v = ink * if ahead { AHEAD } else if sounding { 1.0 } else { 0.7 };
-        let len = (n.duration() / tl.span_s * panel.inner().w).max(NOTE_MIN_LEN);
+        let v = ink * if ahead { plan.dir.marks.ahead } else if sounding { 1.0 } else { 0.7 };
+        let len = (n.duration() / tl.span_s * panel.inner().w).max(plan.dir.marks.note_min_len);
         let (dx, dy) = match slider {
             Slider::Linear => (1.0, 0.0),
             Slider::Ring => {
@@ -97,7 +93,7 @@ fn draw_panel(s: &mut String, plan: &Plan, st: &FrameState, panel: &Panel) {
                 (-ry / l, rx / l)
             }
         };
-        let thick = NOTE_H * if sounding { pulse } else { 1.0 };
+        let thick = plan.dir.marks.note_h * if sounding { pulse } else { 1.0 };
         let cap = if shape.corner >= 0.6 { "round" } else { "butt" };
         let len = if cap == "round" { (len - thick).max(0.5) } else { len };
         write!(
@@ -160,7 +156,7 @@ fn grid(s: &mut String, plan: &Plan, st: &FrameState, panel: &Panel, slider: Sli
                     "<line x1='{x:.1}' y1='{:.1}' x2='{x:.1}' y2='{:.1}' stroke='{}' stroke-width='1'/>",
                     inner.y,
                     inner.bottom(),
-                    gray(if bar { GRID * 1.6 } else { GRID * 0.7 })
+                    gray(if bar { plan.dir.marks.grid * 1.6 } else { plan.dir.marks.grid * 0.7 })
                 )
                 .unwrap();
             }
@@ -182,7 +178,7 @@ fn grid(s: &mut String, plan: &Plan, st: &FrameState, panel: &Panel, slider: Sli
                     s,
                     "<circle cx='{cx:.1}' cy='{cy:.1}' r='{:.1}' fill='none' stroke='{}' stroke-width='1'/>",
                     rmax * f,
-                    gray(GRID)
+                    gray(plan.dir.marks.grid)
                 )
                 .unwrap();
             }
@@ -213,7 +209,7 @@ fn emit(s: &mut String, plan: &Plan, st: &FrameState, panel: &Panel, si: usize, 
         let key = (idx as u64) * 64 + k;
         match e.kind {
             EmitKind::Ring => {
-                let a = age - k as f32 * RING_STAGGER_S;
+                let a = age - k as f32 * plan.dir.marks.ring_stagger_s;
                 if !(0.0..e.life_s).contains(&a) {
                     continue;
                 }
@@ -267,50 +263,6 @@ fn emit(s: &mut String, plan: &Plan, st: &FrameState, panel: &Panel, si: usize, 
     }
 }
 
-/// Header and caption: where we are and which vocabulary entries the scene uses.
-fn chrome(s: &mut String, plan: &Plan, st: &FrameState) {
-    let sc = &plan.scenes[st.scene];
-    let v = &plan.vocab;
-    let tr = plan.track();
-    let bar = ((st.t - tr.drop_t) / tr.bar_s).floor() as i32 + 1;
-    write!(
-        s,
-        "<text x='90' y='84' font-size='20' letter-spacing='4' fill='{}'>{:02}.{:02} {:05.2} s</text>",
-        gray(0.9),
-        sc.index + 1,
-        plan.scenes.len(),
-        st.t
-    )
-    .unwrap();
-    write!(
-        s,
-        "<text x='1830' y='84' font-size='16' text-anchor='end' fill='{}'>{:.1} BPM · bar {}</text>",
-        gray(0.6),
-        tr.bpm,
-        bar.max(0)
-    )
-    .unwrap();
-    write!(
-        s,
-        "<text x='90' y='1008' font-size='14' letter-spacing='2' fill='{}'>{} leads · {} · {} · {} · {}</text>",
-        gray(0.55),
-        sc.dominant,
-        v.layouts[sc.layout].name,
-        v.behaviors[sc.behavior].name,
-        v.looks[sc.look].name,
-        v.palettes[sc.palette].name
-    )
-    .unwrap();
-    write!(
-        s,
-        "<text x='1830' y='1008' font-size='14' text-anchor='end' fill='{}'>edge {:+.2} · energy {:+.2}</text>",
-        gray(0.55),
-        sc.axes.edge,
-        sc.axes.energy
-    )
-    .unwrap();
-}
-
 /// A red frame round the newest note of the leading stem, on the frames it lands.
 fn lock_marker(s: &mut String, plan: &Plan, st: &FrameState) {
     let lead = &plan.scenes[st.scene].dominant;
@@ -320,7 +272,7 @@ fn lock_marker(s: &mut String, plan: &Plan, st: &FrameState) {
     let n = stem.notes[i];
     let Some(panel) = plan.lead_panel(st.scene) else { return };
     let p = panel.note_pos(plan.layouts[st.scene].slider, &plan.timeline, st.t, n.onset, register(stem, n.pitch));
-    let h = NOTE_H * 1.8;
+    let h = plan.dir.marks.note_h * 1.8;
     write!(
         s,
         "<rect x='{:.1}' y='{:.1}' width='{:.1}' height='{:.1}' fill='none' stroke='{RED}' stroke-width='3'/>",

@@ -1,5 +1,11 @@
 target/
 out/
 *.mp4
+*.zip
+tools/neuralnote/
+*.gguf
+data/*.wav
+!data/audio.wav
+data/*.mp3
 __pycache__/
 .DS_Store

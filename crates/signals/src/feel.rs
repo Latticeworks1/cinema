@@ -10,11 +10,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use track::{FPS, Stem, Track};
 
-/// Notes starting within this of each other are one event.
-const SAME_ONSET_S: f32 = 0.011;
-/// Smallest spread that counts as a difference when standardising: staccato, register,
-/// onsets per second, loudness in dB. Without it a near-constant feature would amplify noise.
-const STD_FLOOR: [f32; 4] = [0.05, 0.05, 0.25, 1.0];
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -34,6 +29,11 @@ pub struct EnergyWeights {
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct FeelSettings {
+    /// Notes starting within this of each other are one event.
+    pub same_onset_s: f32,
+    /// Smallest spread that counts as a difference when standardising: staccato, register,
+    /// onsets per second, loudness in dB. Without it a near-constant feature would amplify noise.
+    pub std_floor: [f32; 4],
     /// Length of the bars-windows the song's distribution is measured over.
     pub window_bars: f32,
     /// Pitch range that maps to register 0..1 for pitched stems.
@@ -48,8 +48,8 @@ pub struct FeelSettings {
 impl FeelSettings {
     pub fn from_json(text: &str) -> Result<FeelSettings, String> {
         let s: FeelSettings = serde_json::from_str(text).map_err(|e| format!("feel settings: {e}"))?;
-        if !(s.window_bars > 0.0 && s.pitch_hi > s.pitch_lo) {
-            return Err("feel settings: window_bars must be positive and pitch_hi above pitch_lo".into());
+        if !(s.window_bars > 0.0 && s.pitch_hi > s.pitch_lo && s.same_onset_s >= 0.0 && s.std_floor.iter().all(|f| *f > 0.0)) {
+            return Err("feel settings: window_bars and std_floor must be positive, pitch_hi above pitch_lo".into());
         }
         Ok(s)
     }
@@ -76,7 +76,7 @@ struct Dist {
 }
 
 impl Dist {
-    fn fit(samples: &[[f32; 4]]) -> Dist {
+    fn fit(samples: &[[f32; 4]], floor: &[f32; 4]) -> Dist {
         let n = samples.len().max(1) as f32;
         let mut mean = [0.0; 4];
         for s in samples {
@@ -87,7 +87,7 @@ impl Dist {
         let mut std = [1.0; 4];
         for k in 0..4 {
             let var = samples.iter().map(|s| (s[k] - mean[k]).powi(2)).sum::<f32>() / n;
-            std[k] = var.sqrt().max(STD_FLOOR[k]);
+            std[k] = var.sqrt().max(floor[k]);
         }
         Dist { mean, std }
     }
@@ -116,13 +116,13 @@ fn features(track: &Track, s: &FeelSettings, stems: &[&Stem], t0: f32, t1: f32) 
             let n = stem.notes[i];
             let gap = stem.notes[i + 1..]
                 .iter()
-                .find(|m| m.onset > n.onset + SAME_ONSET_S)
+                .find(|m| m.onset > n.onset + s.same_onset_s)
                 .map_or(fallback_gap, |m| m.onset - n.onset);
             stac += 1.0 - (n.duration() / gap).clamp(0.0, 1.0);
             reg += s.register_override.get(&stem.name).copied().unwrap_or_else(|| {
                 ((n.pitch as f32 - s.pitch_lo) / (s.pitch_hi - s.pitch_lo)).clamp(0.0, 1.0)
             });
-            if n.onset - prev_onset >= SAME_ONSET_S {
+            if n.onset - prev_onset >= s.same_onset_s {
                 events += 1;
             }
             prev_onset = n.onset;
@@ -156,7 +156,7 @@ impl FeelModel {
                 }
             }
         }
-        FeelModel { all: Dist::fit(&all), per_stem: Dist::fit(&per_stem), settings }
+        FeelModel { all: Dist::fit(&all, &settings.std_floor), per_stem: Dist::fit(&per_stem, &settings.std_floor), settings }
     }
 
     pub fn settings(&self) -> &FeelSettings {
@@ -215,6 +215,10 @@ mod tests {
             chords: vec![],
             stems: vec![line("sharp", 84, 0.125, 0.02), line("round", 36, 1.0, 0.95)],
             level_db: vec![-20.0; 240],
+            waveform: vec![],
+            waveform_cols_per_s: 160.0,
+            peaks_hz: std::collections::BTreeMap::new(),
+            loudest: track::Loudest { t: 0.0, db: -20.0 },
         }
     }
 
@@ -243,8 +247,12 @@ mod tests {
         let win = m.settings().window_bars * t.bar_s;
         let mut k = 0.0;
         while k + win <= t.duration_s {
-            let a = m.axes(&t, Selection::All, k, k + win).unwrap();
-            assert!(a.edge.abs() <= 1.0 && a.energy.abs() <= 1.0, "{a:?} at {k}");
+            let played = t.stems.iter().any(|s| s.notes.iter().any(|n| n.onset >= k && n.onset < k + win));
+            let a = m.axes(&t, Selection::All, k, k + win);
+            assert_eq!(a.is_some(), played, "a window has axes exactly when a note starts in it, at {k}");
+            if let Some(a) = a {
+                assert!(a.edge.abs() <= 1.0 && a.energy.abs() <= 1.0, "{a:?} at {k}");
+            }
             k += win;
         }
     }

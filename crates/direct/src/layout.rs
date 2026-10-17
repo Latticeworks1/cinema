@@ -6,23 +6,15 @@
 //! change moves the subjects the camera cuts between.
 
 use crate::geometry::Rect;
+use crate::settings::Stage;
 use crate::vocab::{Rule, Slider};
-
-/// The area of the 1920x1080 screen the panels share.
-pub const STAGE: Rect = Rect { x: 90.0, y: 120.0, w: 1740.0, h: 840.0 };
-const GAP: f32 = 12.0;
-/// How much taller a lane of the leading stem is than the others.
-const LANE_EMPHASIS: f32 = 2.2;
-/// Share of the stage width the leading stem takes in the hero layout.
-const HERO_SHARE: f32 = 0.62;
-const GRID_COLS: usize = 3;
-/// Margin inside a panel before the first note position.
-const PAD: f32 = 14.0;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Panel {
     pub stem: String,
     pub rect: Rect,
+    /// Margin inside the panel before the first note position.
+    pub pad: f32,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -42,45 +34,47 @@ pub struct Timeline {
 
 impl Layout {
     /// Arrange `stems` (display order) with `dominant` given the larger share.
-    pub fn arrange(rule: Rule, slider: Slider, stems: &[&str], dominant: &str) -> Layout {
+    pub fn arrange(rule: Rule, slider: Slider, stems: &[&str], dominant: &str, st: &Stage) -> Layout {
         let n = stems.len();
         let rects: Vec<Rect> = if n <= 1 {
-            vec![STAGE; n]
+            vec![st.rect(); n]
         } else {
             match rule {
-                Rule::Lanes => Layout::lanes(stems, dominant),
-                Rule::Hero => Layout::hero(stems, dominant),
-                Rule::Grid => Layout::grid(stems, dominant),
+                Rule::Lanes => Layout::lanes(stems, dominant, st),
+                Rule::Hero => Layout::hero(stems, dominant, st),
+                Rule::Grid => Layout::grid(stems, dominant, st),
             }
         };
         Layout {
-            panels: stems.iter().zip(rects).map(|(s, rect)| Panel { stem: s.to_string(), rect }).collect(),
+            panels: stems.iter().zip(rects).map(|(s, rect)| Panel { stem: s.to_string(), rect, pad: st.pad }).collect(),
             slider,
         }
     }
 
-    fn lanes(stems: &[&str], dominant: &str) -> Vec<Rect> {
-        let weights: Vec<f32> = stems.iter().map(|s| if *s == dominant { LANE_EMPHASIS } else { 1.0 }).collect();
+    fn lanes(stems: &[&str], dominant: &str, st: &Stage) -> Vec<Rect> {
+        let stage = st.rect();
+        let weights: Vec<f32> = stems.iter().map(|s| if *s == dominant { st.lane_emphasis } else { 1.0 }).collect();
         let total: f32 = weights.iter().sum();
-        let free = STAGE.h - GAP * (stems.len() - 1) as f32;
-        let mut y = STAGE.y;
+        let free = stage.h - st.gap * (stems.len() - 1) as f32;
+        let mut y = stage.y;
         weights
             .iter()
             .map(|w| {
                 let h = free * w / total;
-                let r = Rect::new(STAGE.x, y, STAGE.w, h);
-                y += h + GAP;
+                let r = Rect::new(stage.x, y, stage.w, h);
+                y += h + st.gap;
                 r
             })
             .collect()
     }
 
-    fn hero(stems: &[&str], dominant: &str) -> Vec<Rect> {
-        let left = Rect::new(STAGE.x, STAGE.y, STAGE.w * HERO_SHARE - GAP * 0.5, STAGE.h);
-        let right_x = left.right() + GAP;
-        let right_w = STAGE.right() - right_x;
+    fn hero(stems: &[&str], dominant: &str, st: &Stage) -> Vec<Rect> {
+        let stage = st.rect();
+        let left = Rect::new(stage.x, stage.y, stage.w * st.hero_share - st.gap * 0.5, stage.h);
+        let right_x = left.right() + st.gap;
+        let right_w = stage.right() - right_x;
         let others = stems.len() - 1;
-        let h = (STAGE.h - GAP * (others - 1) as f32) / others as f32;
+        let h = (stage.h - st.gap * (others - 1) as f32) / others as f32;
         let mut k = 0;
         stems
             .iter()
@@ -88,7 +82,7 @@ impl Layout {
                 if *s == dominant {
                     left
                 } else {
-                    let r = Rect::new(right_x, STAGE.y + k as f32 * (h + GAP), right_w, h);
+                    let r = Rect::new(right_x, stage.y + k as f32 * (h + st.gap), right_w, h);
                     k += 1;
                     r
                 }
@@ -96,19 +90,20 @@ impl Layout {
             .collect()
     }
 
-    fn grid(stems: &[&str], dominant: &str) -> Vec<Rect> {
-        let rows = (stems.len() + 1).div_ceil(GRID_COLS);
-        let cw = (STAGE.w - GAP * (GRID_COLS - 1) as f32) / GRID_COLS as f32;
-        let ch = (STAGE.h - GAP * (rows - 1) as f32) / rows as f32;
+    fn grid(stems: &[&str], dominant: &str, st: &Stage) -> Vec<Rect> {
+        let stage = st.rect();
+        let rows = (stems.len() + 1).div_ceil(st.grid_cols);
+        let cw = (stage.w - st.gap * (st.grid_cols - 1) as f32) / st.grid_cols as f32;
+        let ch = (stage.h - st.gap * (rows - 1) as f32) / rows as f32;
         let cell = |c: usize, r: usize, span: usize| {
             Rect::new(
-                STAGE.x + c as f32 * (cw + GAP),
-                STAGE.y + r as f32 * (ch + GAP),
-                cw * span as f32 + GAP * (span - 1) as f32,
+                stage.x + c as f32 * (cw + st.gap),
+                stage.y + r as f32 * (ch + st.gap),
+                cw * span as f32 + st.gap * (span - 1) as f32,
                 ch,
             )
         };
-        let mut free = (0..rows).flat_map(|r| (0..GRID_COLS).map(move |c| (c, r))).filter(|&(c, r)| !(r == 0 && c < 2));
+        let mut free = (0..rows).flat_map(|r| (0..st.grid_cols).map(move |c| (c, r))).filter(|&(c, r)| !(r == 0 && c < 2));
         stems
             .iter()
             .map(|s| {
@@ -129,7 +124,7 @@ impl Layout {
 
 impl Panel {
     pub fn inner(&self) -> Rect {
-        self.rect.inset(PAD)
+        self.rect.inset(self.pad)
     }
 
     /// Where a note starting at `t` with register `register` (0..1) sits when it is `now`.
@@ -160,6 +155,11 @@ impl Panel {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::scenes::Direction;
+
+    fn st() -> Stage {
+        Direction::parse(include_str!("../../../vocab/direction.json")).unwrap().stage
+    }
 
     const STEMS: [&str; 5] = ["piano", "bass", "snare", "kick", "hat"];
 
@@ -169,13 +169,14 @@ mod tests {
 
     #[test]
     fn every_rule_gives_each_stem_a_panel_inside_the_stage_without_overlap() {
+        let stage = st().rect();
         for rule in [Rule::Lanes, Rule::Hero, Rule::Grid] {
             for dominant in STEMS {
-                let l = Layout::arrange(rule, Slider::Linear, &STEMS, dominant);
+                let l = Layout::arrange(rule, Slider::Linear, &STEMS, dominant, &st());
                 assert_eq!(l.panels.len(), 5);
                 for p in &l.panels {
-                    assert!(p.rect.x >= STAGE.x - 0.01 && p.rect.right() <= STAGE.right() + 0.01, "{rule:?} {p:?}");
-                    assert!(p.rect.y >= STAGE.y - 0.01 && p.rect.bottom() <= STAGE.bottom() + 0.01, "{rule:?} {p:?}");
+                    assert!(p.rect.x >= stage.x - 0.01 && p.rect.right() <= stage.right() + 0.01, "{rule:?} {p:?}");
+                    assert!(p.rect.y >= stage.y - 0.01 && p.rect.bottom() <= stage.bottom() + 0.01, "{rule:?} {p:?}");
                 }
                 for (i, a) in l.panels.iter().enumerate() {
                     for b in &l.panels[i + 1..] {
@@ -189,7 +190,7 @@ mod tests {
     #[test]
     fn the_leading_stem_has_the_largest_panel() {
         for rule in [Rule::Lanes, Rule::Hero, Rule::Grid] {
-            let l = Layout::arrange(rule, Slider::Linear, &STEMS, "bass");
+            let l = Layout::arrange(rule, Slider::Linear, &STEMS, "bass", &st());
             let area = |s: &str| {
                 let r = l.panel(s).unwrap().rect;
                 r.w * r.h
@@ -202,7 +203,7 @@ mod tests {
     fn fewer_stems_still_lay_out() {
         for n in 1..=5 {
             for rule in [Rule::Lanes, Rule::Hero, Rule::Grid] {
-                let l = Layout::arrange(rule, Slider::Ring, &STEMS[..n], STEMS[0]);
+                let l = Layout::arrange(rule, Slider::Ring, &STEMS[..n], STEMS[0], &st());
                 assert_eq!(l.panels.len(), n);
             }
         }
@@ -210,7 +211,7 @@ mod tests {
 
     #[test]
     fn a_note_at_the_playhead_sits_on_it_and_later_notes_lie_to_the_right() {
-        let l = Layout::arrange(Rule::Lanes, Slider::Linear, &STEMS, "piano");
+        let l = Layout::arrange(Rule::Lanes, Slider::Linear, &STEMS, "piano", &st());
         let p = l.panel("piano").unwrap();
         let tl = Timeline { span_s: 5.0, now_frac: 0.35 };
         let now = p.note_pos(Slider::Linear, &tl, 10.0, 10.0, 0.5);
@@ -222,7 +223,7 @@ mod tests {
 
     #[test]
     fn ring_notes_stay_inside_the_panel_and_circle_with_time() {
-        let l = Layout::arrange(Rule::Hero, Slider::Ring, &STEMS, "piano");
+        let l = Layout::arrange(Rule::Hero, Slider::Ring, &STEMS, "piano", &st());
         let p = l.panel("piano").unwrap();
         let tl = Timeline { span_s: 5.0, now_frac: 0.35 };
         for k in 0..=20 {
