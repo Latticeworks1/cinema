@@ -180,3 +180,80 @@ fn lyric_tracker<'a>(plan: &Plan, s: &FrameState, ly: &LyricState) -> Svgr<'a> {
     items.extend(boxes(plan, s));
     fframes::svgr!(<g opacity={0.92 * (1.0 - s.look.out)}>{items}</g>)
 }
+
+const METER_X: f32 = 1290.0;
+const METER_Y: f32 = 70.0;
+const METER_W: f32 = 300.0;
+const METER_H: f32 = 14.0;
+
+/// The scene counter, time, BPM, bar, loudness meter and caption line: composited sharp over the
+/// shaded image, the same way as the tracker, since this is information that must stay legible
+/// rather than texture that goes through the display's LED model. It used to be drawn in the flat
+/// pass and smeared along with everything else once a scene's camera zoomed out far enough to
+/// shrink it below the display's subpixel cell size.
+pub fn hud<'a>(plan: &Plan, s: &FrameState) -> Svgr<'a> {
+    let sc = &plan.scenes[s.scene];
+    let v = &plan.vocab;
+    let tr = plan.track();
+    let c = &plan.dir.chrome;
+    let font = plan.dir.font.clone();
+    let bar = ((s.t - tr.drop_t) / tr.bar_s).floor() as i32 + 1;
+    // Loudness in dBFS, held inside the meter range; a missing or non-finite value reads as the
+    // floor of the range. Mirrors `flat::chrome::level_db`, which the lens pass has no need to
+    // depend on the flat crate for.
+    let db = match tr.level_db.get(s.index) {
+        Some(&db) if db.is_finite() => db.clamp(c.meter_floor_db, c.meter_ceil_db),
+        _ => c.meter_floor_db,
+    };
+
+    let mut items: Vec<Svgr> = vec![
+        fframes::svgr!(<text x="90" y="84" font-family={font.clone()} font-size="20" letter-spacing="4" fill="#e6e6e6">{format!("{:02}.{:02} {:05.2} s", sc.index + 1, plan.scenes.len(), s.t)}</text>),
+        fframes::svgr!(<text x="1830" y="84" font-family={font.clone()} font-size="16" text-anchor="end" fill="#999999">{format!("{:.1} BPM · bar {}", tr.bpm, bar.max(0))}</text>),
+    ];
+
+    if c.meter {
+        let frac = (db - c.meter_floor_db) / (c.meter_ceil_db - c.meter_floor_db);
+        items.push(fframes::svgr!(<rect x={METER_X} y={METER_Y} width={METER_W} height={METER_H} fill="none" stroke="#333333" stroke-width="1.5" />));
+        items.push(fframes::svgr!(<rect x={METER_X} y={METER_Y} width={(frac * METER_W).max(0.5)} height={METER_H} fill="#9a9a9a" />));
+    }
+
+    let label = match &sc.text {
+        Some(txt) => format!("\"{txt}\"  ·  {} ({})", sc.dominant, v.palettes[sc.palette].name),
+        None => format!(
+            "{} leads · {} · {} · {} · {}",
+            sc.dominant,
+            v.layouts[sc.layout].name,
+            v.behaviors[sc.behavior].name,
+            v.looks[sc.look].name,
+            v.palettes[sc.palette].name
+        ),
+    };
+    let label_fill = if sc.text.is_some() { "#d9d9d9" } else { "#8c8c8c" };
+    items.push(fframes::svgr!(<text x="90" y="1008" font-family={font.clone()} font-size="14" letter-spacing="2" fill={label_fill}>{label}</text>));
+
+    if c.status {
+        let beat = 60.0 / tr.bpm;
+        let bpb = (tr.bar_s * tr.bpm / 60.0).round().max(1.0) as i64;
+        let k = ((s.t - tr.drop_t) / beat).floor() as i64;
+        let status_bar = k.div_euclid(bpb) + 1;
+        let beat_in_bar = k.rem_euclid(bpb) + 1;
+        let total_bars = (tr.duration_s / tr.bar_s).ceil().max(1.0) as i64;
+        let text = format!(
+            "{:.1} BPM  ·  bar {}/{}  ·  beat {}  ·  {:06.3} s  ·  {:>6.1} dBFS  ·  frame {}/{}",
+            tr.bpm,
+            status_bar.max(1),
+            total_bars,
+            beat_in_bar,
+            s.t,
+            db,
+            s.index + 1,
+            plan.frames()
+        );
+        items.push(fframes::svgr!(<text x="1830" y="1008" font-family={font} font-size="14" letter-spacing="1" text-anchor="end" fill="#8c8c8c">{text}</text>));
+    } else {
+        let axes_text = format!("edge {:+.2} · energy {:+.2}", sc.axes.edge, sc.axes.energy);
+        items.push(fframes::svgr!(<text x="1830" y="1008" font-family={font} font-size="14" text-anchor="end" fill="#8c8c8c">{axes_text}</text>));
+    }
+
+    fframes::svgr!(<g>{items}</g>)
+}

@@ -30,12 +30,6 @@ const RULER_ROW: f32 = 22.0;
 const TICK_BEAT: f32 = 8.0;
 const TICK_BAR: f32 = 16.0;
 
-/// Header meter position, in logical pixels.
-const METER_X: f32 = 1290.0;
-const METER_Y: f32 = 70.0;
-const METER_W: f32 = 300.0;
-const METER_H: f32 = 14.0;
-
 const LIT: &str = "#e6e6e6";
 const DIM: &str = "#666666";
 const RULE: &str = "#333333";
@@ -252,118 +246,7 @@ pub fn beats_per_bar(tr: &Track) -> usize {
     (tr.bar_s * tr.bpm / 60.0).round().max(1.0) as usize
 }
 
-/// Loudness at `frame` in dBFS, held inside the meter range. A missing or non-finite value reads
-/// as the floor of the range.
-pub fn level_db(tr: &Track, frame: usize, c: &direct::Chrome) -> f32 {
-    match tr.level_db.get(frame) {
-        Some(&db) if db.is_finite() => db.clamp(c.meter_floor_db, c.meter_ceil_db),
-        _ => c.meter_floor_db,
-    }
-}
-
-/// Loudness meter in the header, filled from the floor to the ceiling of its range.
-pub fn meter(s: &mut String, plan: &Plan, st: &FrameState) {
-    if !plan.dir.chrome.meter {
-        return;
-    }
-    let c = &plan.dir.chrome;
-    let db = level_db(plan.track(), st.index, c);
-    let frac = (db - c.meter_floor_db) / (c.meter_ceil_db - c.meter_floor_db);
-    write!(
-        s,
-        "<g id='meter'><rect x='{METER_X}' y='{METER_Y}' width='{METER_W}' height='{METER_H}' fill='none' stroke='{RULE}' stroke-width='1.5'/><rect x='{METER_X}' y='{METER_Y}' width='{:.1}' height='{METER_H}' fill='{METER_FILL}'/></g>",
-        (frac * METER_W).max(0.5)
-    )
-    .unwrap();
-}
-
-/// Header: where we are in the scene list and in the track, plus the live streaming text tracking overlay.
-pub fn header(s: &mut String, plan: &Plan, st: &FrameState) {
-    let sc = &plan.scenes[st.scene];
-    let tr = plan.track();
-    let bar = ((st.t - tr.drop_t) / tr.bar_s).floor() as i32 + 1;
-    write!(
-        s,
-        "<text x='90' y='84' font-size='20' letter-spacing='4' fill='{}'>{:02}.{:02} {:05.2} s</text>",
-        gray(0.9),
-        sc.index + 1,
-        plan.scenes.len(),
-        st.t
-    )
-    .unwrap();
-
-    write!(
-        s,
-        "<text x='1830' y='84' font-size='16' text-anchor='end' fill='{}'>{:.1} BPM · bar {}</text>",
-        gray(0.6),
-        tr.bpm,
-        bar.max(0)
-    )
-    .unwrap();
-    meter(s, plan, st);
-}
-
-/// Caption: the scene's vocabulary on the left. The right side carries the status line when it
-/// is on, and the edge and energy axes otherwise.
-pub fn caption(s: &mut String, plan: &Plan, st: &FrameState) {
-    let sc = &plan.scenes[st.scene];
-    let v = &plan.vocab;
-    let label = match &sc.text {
-        Some(txt) => format!("\"{txt}\"  ·  {} ({})", sc.dominant, v.palettes[sc.palette].name),
-        None => format!(
-            "{} leads · {} · {} · {} · {}",
-            sc.dominant,
-            v.layouts[sc.layout].name,
-            v.behaviors[sc.behavior].name,
-            v.looks[sc.look].name,
-            v.palettes[sc.palette].name
-        ),
-    };
-    write!(
-        s,
-        "<text x='90' y='1008' font-size='14' letter-spacing='2' fill='{}'>{}</text>",
-        if sc.text.is_some() { gray(0.85) } else { gray(0.55) },
-        label
-    )
-    .unwrap();
-    if plan.dir.chrome.status {
-        status(s, plan, st);
-    } else {
-        write!(
-            s,
-            "<text x='1830' y='1008' font-size='14' text-anchor='end' fill='{}'>edge {:+.2} · energy {:+.2}</text>",
-            gray(0.55),
-            sc.axes.edge,
-            sc.axes.energy
-        )
-        .unwrap();
-    }
-}
-
-/// BPM, bar within the track, beat within the bar, time, level and frame.
-fn status(s: &mut String, plan: &Plan, st: &FrameState) {
-    let tr = plan.track();
-    let beat = 60.0 / tr.bpm;
-    let bpb = beats_per_bar(tr) as i64;
-    let k = ((st.t - tr.drop_t) / beat).floor() as i64;
-    let bar = k.div_euclid(bpb) + 1;
-    let beat_in_bar = k.rem_euclid(bpb) + 1;
-    let total_bars = (tr.duration_s / tr.bar_s).ceil().max(1.0) as i64;
-    let text = format!(
-        "{:.1} BPM  ·  bar {}/{}  ·  beat {}  ·  {:06.3} s  ·  {:>6.1} dBFS  ·  frame {}/{}",
-        tr.bpm,
-        bar.max(1),
-        total_bars,
-        beat_in_bar,
-        st.t,
-        level_db(tr, st.index, &plan.dir.chrome),
-        st.index + 1,
-        plan.frames()
-    );
-    write!(
-        s,
-        "<text id='status' x='1830' y='1008' font-size='14' letter-spacing='1' text-anchor='end' fill='{}'>{text}</text>",
-        gray(0.55)
-    )
-    .unwrap();
-}
+// The scene counter, time, BPM, bar, loudness meter and caption line used to be drawn here and
+// go through the LED-degraded flat pass with everything else. They are information that must
+// stay legible, the same category as the camera's own tracker labels, so they are now composited
+// sharp over the shaded image instead: see `lens::overlay::hud`, next to `overlay::tracker`.

@@ -25,7 +25,6 @@ pub fn artwork(plan: &Plan, index: usize, bands: Option<&[f32]>) -> String {
         super::HEIGHT
     )
     .unwrap();
-    chrome::header(&mut s, plan, &st);
     chrome::band(&mut s, plan, &st, bands);
     let dim = if st.lyric.is_some() { plan.dir.lyric.dim } else { 1.0 };
     write!(s, "<g opacity='{dim:.2}'>").unwrap();
@@ -36,7 +35,6 @@ pub fn artwork(plan: &Plan, index: usize, bands: Option<&[f32]>) -> String {
     if let Some(ly) = &st.lyric {
         lyric(&mut s, plan, ly);
     }
-    chrome::caption(&mut s, plan, &st);
     if st.look.lock && st.lyric.is_none() {
         lock_marker(&mut s, plan, &st);
     }

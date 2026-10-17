@@ -119,6 +119,7 @@ impl Video for LensVideo {
         fframes::svgr!(
             <svg xmlns="http://www.w3.org/2000/svg" width={WIDTH} height={HEIGHT}>
                 <image href={layer.href()} x="0" y="0" width={WIDTH} height={HEIGHT} />
+                {overlay::hud(&self.plan, &s)}
                 {if stage() >= 4.0 { overlay::tracker(&self.plan, &s) } else { Svgr::empty() }}
             </svg>
         )

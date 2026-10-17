@@ -154,13 +154,14 @@ mod tests {
     }
 
     #[test]
-    fn the_meter_and_the_status_line_are_in_the_frame() {
+    fn the_meter_and_the_status_line_are_not_in_the_frame() {
+        // They used to be drawn here and go through the LED-degraded pass with everything else;
+        // they are information that must stay legible, so `lens::overlay::hud` now composites
+        // them sharp over the shaded image instead, the same way as the tracker.
         let v = video();
         let s = v.artwork(frame_after_drop(&v), None);
-        assert!(!group(&s, "meter").is_empty(), "no meter");
-        let status = group(&s, "status");
-        assert!(status.contains("BPM") && status.contains("bar ") && status.contains("dBFS"), "{status}");
-        assert!(status.contains("beat ") && status.contains("frame "), "{status}");
+        assert!(group(&s, "meter").is_empty(), "meter leaked back into the flat pass");
+        assert!(group(&s, "status").is_empty(), "status leaked back into the flat pass");
     }
 
     #[test]
@@ -202,16 +203,6 @@ mod tests {
         let s = v.artwork(f, Some(&b));
         assert!(group(&s, "fft").is_empty() && !group(&s, "wave").is_empty(), "fft flag");
         v.plan.dir.chrome.fft = true;
-
-        v.plan.dir.chrome.meter = false;
-        let s = v.artwork(f, None);
-        assert!(group(&s, "meter").is_empty() && !group(&s, "status").is_empty(), "meter flag");
-        v.plan.dir.chrome.meter = true;
-
-        v.plan.dir.chrome.status = false;
-        let s = v.artwork(f, None);
-        assert!(group(&s, "status").is_empty() && s.contains("edge "), "status flag");
-        v.plan.dir.chrome.status = true;
     }
 
     #[test]
