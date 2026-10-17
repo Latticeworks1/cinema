@@ -1,0 +1,23 @@
+[package]
+name = "cinema-lens"
+description = "Pass 2: a virtual camera films the flat pass on physical displays, one material per panel."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+direct = { workspace = true }
+track = { workspace = true }
+fframes = { workspace = true, features = ["compile-time-svgtree"] }
+fframes_skia_renderer = { workspace = true }
+fframes_native_player = { workspace = true }
+
+[lib]
+name = "cinema_lens"
+path = "src/lib.rs"
+doctest = false
+
+[[bin]]
+name = "cinema-lens"
+path = "src/main.rs"

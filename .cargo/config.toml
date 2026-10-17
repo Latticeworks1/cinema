@@ -1,0 +1,3 @@
+# Share compiled dependencies (Skia, fframes) with ff-unmute so a second 3 GB build tree is not needed.
+[build]
+target-dir = "../ff-unmute/target"

@@ -1,0 +1,8 @@
+{
+  "window_bars": 1.0,
+  "pitch_lo": 24,
+  "pitch_hi": 96,
+  "register_override": { "kick": 0.1, "snare": 0.55, "hat": 0.95, "perc": 0.5 },
+  "edge": { "staccato": 0.4, "register": 0.35, "rate": 0.25 },
+  "energy": { "level": 0.5, "rate": 0.5 }
+}

@@ -1,0 +1,93 @@
+{
+  "stems": [
+    { "name": "piano", "ink": 1.00 },
+    { "name": "bass",  "ink": 0.80 },
+    { "name": "snare", "ink": 0.92 },
+    { "name": "kick",  "ink": 0.86 },
+    { "name": "hat",   "ink": 0.62 }
+  ],
+
+  "shapes": [
+    { "name": "shard", "at": { "edge":  0.90, "energy":  0.50 }, "corner": 0.00,
+      "emit": { "kind": "shard", "count": 5, "speed": 420, "life_s": 0.45, "size": 22 } },
+    { "name": "tick",  "at": { "edge":  0.60, "energy": -0.30 }, "corner": 0.10,
+      "emit": { "kind": "shard", "count": 2, "speed": 200, "life_s": 0.30, "size": 17 } },
+    { "name": "block", "at": { "edge":  0.10, "energy":  0.40 }, "corner": 0.25,
+      "emit": { "kind": "dot",   "count": 4, "speed": 200, "life_s": 0.60, "size": 14 } },
+    { "name": "pill",  "at": { "edge": -0.50, "energy":  0.00 }, "corner": 1.00,
+      "emit": { "kind": "dot",   "count": 3, "speed": 120, "life_s": 1.00, "size": 17 } },
+    { "name": "blob",  "at": { "edge": -0.90, "energy": -0.20 }, "corner": 1.00,
+      "emit": { "kind": "ring",  "count": 1, "speed": 140, "life_s": 1.40, "size": 34 } },
+    { "name": "halo",  "at": { "edge": -0.60, "energy":  0.70 }, "corner": 1.00,
+      "emit": { "kind": "ring",  "count": 2, "speed": 220, "life_s": 0.90, "size": 26 } }
+  ],
+
+  "palettes": [
+    { "name": "Mono",     "at": { "edge":  0.50, "energy": -0.90 },
+      "stops": ["#050506", "#2b2c2e", "#8a8c90", "#d9dadc", "#ffffff"] },
+    { "name": "Navy",     "at": { "edge":  0.00, "energy": -0.70 },
+      "stops": ["#071451", "#0d2a8c", "#4a63d6", "#b8c4ff", "#f4f6ff"] },
+    { "name": "Rose",     "at": { "edge": -0.80, "energy": -0.30 },
+      "stops": ["#0a0306", "#3d1024", "#9a3a5e", "#e8869a", "#fff0f3"] },
+    { "name": "Amber",    "at": { "edge": -0.60, "energy":  0.30 },
+      "stops": ["#070300", "#3d1a02", "#b35a09", "#ffae3d", "#fff3d6"] },
+    { "name": "Phosphor", "at": { "edge":  0.30, "energy":  0.10 },
+      "stops": ["#010604", "#05361b", "#13a85a", "#7dffb4", "#eafff3"] },
+    { "name": "Thermal",  "at": { "edge":  0.20, "energy":  0.70 },
+      "stops": ["#050310", "#3a0b6b", "#b3306a", "#f6862a", "#fcf6b4"] },
+    { "name": "Neon",     "at": { "edge":  0.70, "energy":  0.80 },
+      "stops": ["#000502", "#003d1e", "#00c46a", "#5dffae", "#f0fff6"] }
+  ],
+
+  "behaviors": [
+    { "name": "establish", "at": { "edge":  0.50, "energy": -0.90 }, "framing": "wide",
+      "kind": { "push": { "from": 1.0, "to": 1.12 } } },
+    { "name": "settle",    "at": { "edge": -0.20, "energy": -0.80 }, "framing": "dominant",
+      "kind": { "push": { "from": 1.0, "to": 1.25 } } },
+    { "name": "drift",     "at": { "edge": -0.80, "energy": -0.20 }, "framing": "dominant",
+      "kind": { "drift": { "zoom": 1.15, "amp": 16 } } },
+    { "name": "follow",    "at": { "edge":  0.30, "energy":  0.00 }, "framing": "dominant",
+      "kind": { "follow": { "zoom": 1.5 } } },
+    { "name": "orbit",     "at": { "edge":  0.00, "energy":  0.40 }, "framing": "dominant",
+      "kind": { "orbit": { "zoom": 1.1, "tilt": 0.16, "roll": 0.03 } } },
+    { "name": "whip",      "at": { "edge":  0.60, "energy":  0.70 }, "framing": "dominant",
+      "kind": { "whip": { "zoom": 1.3 } } },
+    { "name": "charge",    "at": { "edge":  0.90, "energy":  0.95 }, "framing": "dominant",
+      "kind": { "push": { "from": 1.1, "to": 1.7 } } }
+  ],
+
+  "looks": [
+    { "name": "documentary", "at": { "edge": -0.90, "energy": -0.50 },
+      "base":  { "bloom": 0.25, "led": 0.55, "aberration": 0.15, "grain": 0.15, "vignette": 0.35, "blur": 0.10 },
+      "scale": { "tear": 0.10, "punch": 0.50 } },
+    { "name": "dim",         "at": { "edge":  0.40, "energy": -0.90 },
+      "base":  { "bloom": 0.35, "led": 0.35, "aberration": 0.30, "grain": 0.35, "vignette": 0.60, "blur": 0.25 },
+      "scale": { "tear": 0.20, "punch": 0.60 } },
+    { "name": "glow",        "at": { "edge": -0.30, "energy":  0.30 },
+      "base":  { "bloom": 0.80, "led": 0.45, "aberration": 0.30, "grain": 0.20, "vignette": 0.45, "blur": 0.25 },
+      "scale": { "tear": 0.40, "punch": 0.90 } },
+    { "name": "hard",        "at": { "edge":  0.50, "energy":  0.60 },
+      "base":  { "bloom": 0.50, "led": 0.60, "aberration": 0.55, "grain": 0.30, "vignette": 0.50, "blur": 0.30 },
+      "scale": { "tear": 0.90, "punch": 1.00 } },
+    { "name": "wreck",       "at": { "edge":  0.90, "energy":  0.95 },
+      "base":  { "bloom": 0.70, "led": 0.70, "aberration": 0.90, "grain": 0.50, "vignette": 0.60, "blur": 0.55 },
+      "scale": { "tear": 1.40, "punch": 1.30 } }
+  ],
+
+  "materials": [
+    { "name": "dot_soft",   "at": { "edge": -0.90, "energy": -0.20 }, "layout": "dot",    "cell": 4.0, "gap": 0.25, "angle": 0.0 },
+    { "name": "dot_fine",   "at": { "edge": -0.40, "energy":  0.30 }, "layout": "dot",    "cell": 3.0, "gap": 0.20, "angle": 0.0 },
+    { "name": "stripe",     "at": { "edge":  0.00, "energy":  0.00 }, "layout": "stripe", "cell": 3.0, "gap": 0.30, "angle": 0.0 },
+    { "name": "delta",      "at": { "edge":  0.40, "energy":  0.20 }, "layout": "delta",  "cell": 3.0, "gap": 0.25, "angle": 0.0 },
+    { "name": "block_fine", "at": { "edge":  0.70, "energy": -0.50 }, "layout": "block",  "cell": 2.5, "gap": 0.35, "angle": 0.0 },
+    { "name": "block_hard", "at": { "edge":  0.90, "energy":  0.30 }, "layout": "block",  "cell": 4.0, "gap": 0.40, "angle": 0.0 }
+  ],
+
+  "layouts": [
+    { "name": "lanes",     "at": { "edge":  0.20, "energy": -0.60 }, "rule": "lanes", "slider": "linear" },
+    { "name": "hero",      "at": { "edge":  0.00, "energy":  0.70 }, "rule": "hero",  "slider": "linear" },
+    { "name": "hero_ring", "at": { "edge": -0.80, "energy": -0.10 }, "rule": "hero",  "slider": "ring" },
+    { "name": "grid",      "at": { "edge":  0.70, "energy":  0.40 }, "rule": "grid",  "slider": "linear" },
+    { "name": "grid_ring", "at": { "edge": -0.20, "energy": -0.40 }, "rule": "grid",  "slider": "ring" }
+  ]
+}

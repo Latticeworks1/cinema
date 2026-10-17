@@ -1,0 +1,23 @@
+[package]
+name = "cinema-flat"
+description = "Pass 1: every stem as a panel of notes, emitters and a lock marker, drawn flat in white on black at 2x."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+direct = { workspace = true }
+track = { workspace = true }
+fframes = { workspace = true }
+fframes_skia_renderer = { workspace = true }
+fframes_native_player = { workspace = true }
+
+[lib]
+name = "cinema_flat"
+path = "src/lib.rs"
+doctest = false
+
+[[bin]]
+name = "cinema-flat"
+path = "src/main.rs"

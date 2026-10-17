@@ -1,0 +1,24 @@
+{
+  "routes": [
+    { "from": "kick.hit",       "to": "punch",      "gain": 1.00 },
+    { "from": "kick.hit",       "to": "zoom",       "gain": 0.04 },
+    { "from": "kick.hit",       "to": "tear",       "gain": 0.30 },
+    { "from": "kick.hit",       "to": "pulse",      "gain": 0.18 },
+    { "from": "snare.hit",      "to": "tear",       "gain": 0.80 },
+    { "from": "snare.hit",      "to": "aberration", "gain": 0.25 },
+    { "from": "hat.hit",        "to": "grain",      "gain": 0.12 },
+    { "from": "hat.hit",        "to": "pulse",      "gain": 0.06 },
+    { "from": "bass.hit",       "to": "blur",       "gain": 0.20, "curve": "square" },
+    { "from": "bass.pitch",     "to": "aim_y",      "gain": 36,   "smooth_s": 0.20 },
+    { "from": "bass.gate",      "to": "led",        "gain": 0.10, "smooth_s": 0.10 },
+    { "from": "piano.pitch",    "to": "aim_y",      "gain": -70,  "smooth_s": 0.10, "lead_s": 0.15 },
+    { "from": "piano.leap",     "to": "roll",       "gain": 0.14 },
+    { "from": "piano.hit",      "to": "bloom",      "gain": 0.25 },
+    { "from": "piano.hit",      "to": "pulse",      "gain": 0.12 },
+    { "from": "piano.density",  "to": "emit",       "gain": 0.80 },
+    { "from": "piano.quiet",    "to": "zoom",       "gain": 0.06, "curve": "smooth" },
+    { "from": "master.level",   "to": "bloom",      "gain": 0.30, "curve": "smooth" },
+    { "from": "master.level",   "to": "aberration", "gain": 0.15 },
+    { "from": "master.bar_phase", "to": "tilt_y",   "gain": 0.04, "curve": "sine" }
+  ]
+}
