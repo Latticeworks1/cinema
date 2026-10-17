@@ -1,8 +1,8 @@
-# Audio Transcription and Notes Ingestion in ff-cinema
+# Audio Transcription and Notes Ingestion in cinema
 
 ## Overview
 
-`ff-cinema` does not synthesize or guess choreography; every cut, camera motion, visual mark, and modulation oscillator is driven deterministically by musical events (note onsets, offsets, pitches, and stem assignments).
+`cinema` does not synthesize or guess choreography; every cut, camera motion, visual mark, and modulation oscillator is driven deterministically by musical events (note onsets, offsets, pitches, and stem assignments).
 
 To render a project, the pipeline requires:
 1. An audio soundtrack (`.wav` or `.mp3`).
@@ -14,7 +14,7 @@ To render a project, the pipeline requires:
 
 * **NeuralNote**: Located locally at `/Users/m1a4xnetworkprobe./Applications/NeuralNote.app`. NeuralNote is a modern neural audio-to-MIDI transcriber that provides superior polyphonic and onset tracking compared to older, stale utilities (such as basic-pitch).
 * **Whisper / Specialized Transcribers**: Modern neural audio models (and whisper-based audio/speech/alignment variants) provide robust feature extraction.
-* **Separation of Concerns**: Because NeuralNote operates as an interactive standalone app and audio plugin (AU/VST3), MIDI files exported from NeuralNote or a DAW can be converted to the `notes.json` schema to drive `ff-cinema`.
+* **Separation of Concerns**: Because NeuralNote operates as an interactive standalone app and audio plugin (AU/VST3), MIDI files exported from NeuralNote or a DAW can be converted to the `notes.json` schema to drive `cinema`.
 
 ---
 
