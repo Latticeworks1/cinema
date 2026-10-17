@@ -301,7 +301,15 @@ impl Plan {
         cam = self.shot(si, t, cam);
         let lyric = lyric::state(&self.lyrics, &self.dir, index);
         if let Some(ls) = &lyric {
+            // aim and zoom stay owned by the lyric camera: the word being typed must stay framed
+            // and legible. But the scene's own chosen personality (Orbit's sweep, Drift's wander,
+            // Follow's tracking) is real motion, not noise, so its tilt and roll ride along on
+            // top of the line's own instead of being discarded outright.
+            let behave_cam = cam;
             cam = lyric::camera(ls, &self.dir);
+            cam.tilt_x += behave_cam.tilt_x;
+            cam.tilt_y += behave_cam.tilt_y;
+            cam.roll += behave_cam.roll;
         }
 
         // Pre-drop cinematic arc
