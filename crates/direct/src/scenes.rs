@@ -119,6 +119,11 @@ struct Boundary {
     t: f32,
     priority: u8,
     reason: String,
+    /// Placed by a packet cue rather than derived from the track. A cue's timing is itself a
+    /// measured event (the moment of a sung line), not incidental noise, so two cues are never
+    /// thinned against each other for being close together; they may still suppress, or be
+    /// suppressed by, a derived boundary within `min_scene_bars`.
+    from_cue: bool,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -172,7 +177,7 @@ fn snap(t: f32, track: &Track, d: &Direction) -> (f32, Option<String>) {
 fn candidates(track: &Track, d: &Direction) -> Vec<Boundary> {
     let bar = track.bar_s;
     let gap = d.entrance_gap_bars * bar;
-    let b = |t: f32, priority: u8, reason: String| Boundary { t, priority, reason };
+    let b = |t: f32, priority: u8, reason: String| Boundary { t, priority, reason, from_cue: false };
     let mut out = vec![
         b(0.0, d.priority.start, "start".into()),
         b(track.drop_t, d.priority.drop, "drop (first bass note)".into()),
@@ -181,7 +186,9 @@ fn candidates(track: &Track, d: &Direction) -> Vec<Boundary> {
     let phrase = d.phrase_bars as f32 * bar;
     if !d.cues.is_empty() {
         for cue in &d.cues {
-            out.push(b(cue.t, cue.priority.unwrap_or(8), cue.label.clone().unwrap_or_else(|| format!("cue at {:.2}s", cue.t))));
+            let mut cb = b(cue.t, cue.priority.unwrap_or(8), cue.label.clone().unwrap_or_else(|| format!("cue at {:.2}s", cue.t)));
+            cb.from_cue = true;
+            out.push(cb);
         }
     } else if track.drop_t > 0.0 {
         let mut pre_k = 1;
@@ -223,11 +230,14 @@ fn candidates(track: &Track, d: &Direction) -> Vec<Boundary> {
 }
 
 /// Keep high-priority boundaries first and drop any that fall within `min_gap` of a kept one.
+/// Two cues are never thinned against each other: each is a measured moment (a sung line), not
+/// incidental noise, so cues may cut as fast as the lyric actually arrives. A cue still competes
+/// with, and by priority normally beats, a derived boundary within `min_gap`.
 fn thin(mut cands: Vec<Boundary>, min_gap: f32) -> Vec<Boundary> {
     cands.sort_by(|a, b| b.priority.cmp(&a.priority).then(a.t.total_cmp(&b.t)));
     let mut kept: Vec<Boundary> = vec![];
     for c in cands {
-        if kept.iter().all(|k| (k.t - c.t).abs() >= min_gap) {
+        if kept.iter().all(|k| (k.from_cue && c.from_cue) || (k.t - c.t).abs() >= min_gap) {
             kept.push(c);
         }
     }
