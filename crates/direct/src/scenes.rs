@@ -67,6 +67,20 @@ pub struct Cue {
     pub layout: Option<String>,
     #[serde(default)]
     pub text: Option<String>,
+    /// Real onset, in absolute track seconds, of every word of `text` in reading order (each
+    /// `" / "` subline's words in turn). From a forced alignment of the known lyric words against
+    /// a transcriber's real decode of the vocal, not authored: when present it replaces the
+    /// uniform typing speed as the source of which word is newest, so the line reveals in time
+    /// with what is actually sung instead of a constant pace. Absent for a cue with no sung text
+    /// (a stage direction) or one nobody has aligned yet; `lines()` falls back to typing speed.
+    #[serde(default)]
+    pub word_times: Option<Vec<f32>>,
+}
+
+/// Every word of a cue's text, in the order `word_times` must list them: each `" / "` subline in
+/// turn, split on whitespace.
+pub fn cue_words(text: &str) -> impl Iterator<Item = &str> {
+    text.split(" / ").flat_map(|sub| sub.split_whitespace())
 }
 
 impl Direction {
@@ -109,7 +123,15 @@ impl Direction {
             && d.chrome.band_span_panels > 0.0
             && d.chrome.merge_px > 0.0
             && d.chrome.meter_floor_db < d.chrome.meter_ceil_db
-            && d.cues.iter().all(|c| c.t >= 0.0);
+            && d.cues.iter().all(|c| c.t >= 0.0)
+            && d.cues.iter().all(|c| match &c.word_times {
+                None => true,
+                Some(wt) => {
+                    wt.len() == c.text.as_deref().map_or(0, |t| cue_words(t).count())
+                        && wt.windows(2).all(|w| w[1] >= w[0])
+                        && wt.first().is_none_or(|&t0| t0 >= 0.0)
+                }
+            });
         if ok { Ok(d) } else { Err("direction: a value is out of range".into()) }
     }
 }
@@ -151,6 +173,9 @@ pub struct Scene {
     pub material_by_stem: Vec<usize>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub text: Option<String>,
+    /// The matched cue's real per-word onsets, aligned with `text`; see `Cue::word_times`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub word_times: Option<Vec<f32>>,
 }
 
 impl Scene {
@@ -311,6 +336,7 @@ pub fn derive(track: &Track, feel: &FeelModel, vocab: &Vocabulary, d: &Direction
         let look = matched_cue.and_then(|c| c.look.as_deref()).and_then(|l| vocab.look_index(l)).unwrap_or(look);
         let layout = matched_cue.and_then(|c| c.layout.as_deref()).and_then(|l| vocab.layout_index(l)).unwrap_or(layout);
         let text = matched_cue.and_then(|c| c.text.clone());
+        let word_times = matched_cue.and_then(|c| c.word_times.clone());
 
         scenes.push(Scene {
             index: i,
@@ -329,6 +355,7 @@ pub fn derive(track: &Track, feel: &FeelModel, vocab: &Vocabulary, d: &Direction
             shape_by_stem,
             material_by_stem,
             text,
+            word_times,
         });
     }
     Ok(scenes)

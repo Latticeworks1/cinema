@@ -18,6 +18,9 @@ pub struct LyricLine {
     pub text: String,
     pub t0: f32,
     pub t1: f32,
+    /// Real onset of every word of `text`, in order, when the source cue has one; see
+    /// `Cue::word_times`. `None` reveals the line at a uniform typing speed instead.
+    pub word_times: Option<Vec<f32>>,
 }
 
 /// One line at one frame.
@@ -73,17 +76,40 @@ pub fn lines(scenes: &[Scene], track: &Track, d: &Direction) -> Vec<LyricLine> {
             continue;
         }
         let n = parts.len();
+        // Slice the scene's flat per-word onsets into one run per subline, in the same reading
+        // order `scenes::cue_words` lists them in, before placing the cuts: `Direction::parse`
+        // already guarantees the total count matches, so each subline's words consume exactly
+        // its share, and the first real word of a subline is the truest cut point there is.
+        let mut rest = sc.word_times.as_deref();
+        let word_runs: Vec<Option<Vec<f32>>> = parts
+            .iter()
+            .map(|p| {
+                let count = p.split_whitespace().count();
+                rest.map(|wt| {
+                    let (head, tail) = wt.split_at(count);
+                    rest = Some(tail);
+                    head.to_vec()
+                })
+            })
+            .collect();
         let mut cuts = vec![sc.t0];
         for k in 1..n {
-            let raw = sc.t0 + (sc.t1 - sc.t0) * k as f32 / n as f32;
-            let snapped = track.drop_t + ((raw - track.drop_t) / beat).round() * beat;
             let lo = cuts[k - 1] + d.lyric.min_s;
             let hi = sc.t1 - d.lyric.min_s * (n - k) as f32;
-            cuts.push(if lo <= hi { snapped.clamp(lo, hi) } else { raw });
+            let raw = match word_runs[k].as_ref().and_then(|wt| wt.first()) {
+                // A real onset for this subline's first word: no need to guess or snap to a
+                // beat, it already is one.
+                Some(&onset) => onset,
+                None => {
+                    let guess = sc.t0 + (sc.t1 - sc.t0) * k as f32 / n as f32;
+                    track.drop_t + ((guess - track.drop_t) / beat).round() * beat
+                }
+            };
+            cuts.push(if lo <= hi { raw.clamp(lo, hi) } else { raw });
         }
         cuts.push(sc.t1);
-        for (k, p) in parts.iter().enumerate() {
-            out.push(LyricLine { scene: sc.index, text: (*p).to_string(), t0: cuts[k], t1: cuts[k + 1] });
+        for (k, (p, word_times)) in parts.iter().zip(word_runs).enumerate() {
+            out.push(LyricLine { scene: sc.index, text: (*p).to_string(), t0: cuts[k], t1: cuts[k + 1], word_times });
         }
     }
     out
@@ -113,9 +139,21 @@ fn words(text: &str, typed: usize) -> Vec<(usize, usize)> {
     out
 }
 
-/// Seconds into a shot at which its line is fully typed.
+/// Seconds into a shot at which its line is fully typed: the real onset of its last word when
+/// the line has real timing, or a fixed share of the shot's length otherwise.
 fn typed_by(l: &LyricLine, d: &Direction) -> f32 {
-    ((l.t1 - l.t0) * d.lyric.type_frac).min(d.lyric.type_cap_s)
+    match &l.word_times {
+        Some(wt) => wt.last().map_or(0.0, |&onset| onset - l.t0),
+        None => ((l.t1 - l.t0) * d.lyric.type_frac).min(d.lyric.type_cap_s),
+    }
+}
+
+/// Characters revealed by real per-word onsets: a word appears the instant it is actually sung,
+/// not at a uniform typing speed. The newest word is therefore the one being sung right now.
+fn typed_from_onsets(text: &str, wt: &[f32], t: f32) -> usize {
+    let bounds = words(text, text.chars().count());
+    let n_done = wt.iter().filter(|&&onset| t >= onset).count().min(bounds.len());
+    n_done.checked_sub(1).and_then(|i| bounds.get(i)).map_or(0, |&(s, wl)| s + wl)
 }
 
 pub fn state(lines: &[LyricLine], d: &Direction, index: usize) -> Option<LyricState> {
@@ -129,7 +167,10 @@ pub fn state(lines: &[LyricLine], d: &Direction, index: usize) -> Option<LyricSt
     let len = l.text.chars().count();
     let age = t - l.t0;
     let done = typed_by(l, d).max(1e-3);
-    let typed = ((ly.pre + (1.0 - ly.pre) * (age / done).clamp(0.0, 1.0)) * len as f32).ceil().min(len as f32) as usize;
+    let typed = match &l.word_times {
+        Some(wt) => typed_from_onsets(&l.text, wt, t),
+        None => ((ly.pre + (1.0 - ly.pre) * (age / done).clamp(0.0, 1.0)) * len as f32).ceil().min(len as f32) as usize,
+    };
     let lock_at = ((l.t0 + done + ly.lock_delay_s) * FPS as f32).round() as usize;
     let locked = index >= lock_at && index < lock_at + d.lock_frames;
     let grow = ((age - done) / (ly.lock_delay_s + 0.2)).clamp(0.0, 1.0);
