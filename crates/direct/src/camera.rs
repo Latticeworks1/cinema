@@ -9,9 +9,6 @@ use crate::scenes::Direction;
 use crate::settings::CameraLimits;
 use crate::vocab::BehaviorKind;
 
-/// Must match `FOCAL` in lens.sksl.
-pub const FOCAL: f32 = 1.7;
-
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Camera {
     pub aim: (f32, f32),
@@ -96,7 +93,7 @@ pub fn keep_in_stage(c: &mut Camera, lim: &CameraLimits) {
 /// Two passes absorb the small error that tilt and roll add to the first estimate.
 pub fn keep_in_view(c: &mut Camera, point: (f32, f32), lim: &CameraLimits) {
     for _ in 0..2 {
-        let Some(p) = project(c, point, W, H) else { return };
+        let Some(p) = project(c, point, W, H, lim.focal) else { return };
         let (lo_x, hi_x, lo_y, hi_y) = (W * lim.safe_x, W * (1.0 - lim.safe_x), H * lim.safe_y, H * (1.0 - lim.safe_y));
         let (dx, dy) = (p.0.clamp(lo_x, hi_x) - p.0, p.1.clamp(lo_y, hi_y) - p.1);
         // One logical pixel is `zoom` output pixels at the aim.
@@ -127,8 +124,10 @@ fn rotate(c: &Camera, v: V3) -> V3 {
 }
 
 /// Where a logical point of the flat screen lands in the lens output. `None` behind the camera.
-pub fn project(c: &Camera, q: (f32, f32), res_w: f32, res_h: f32) -> Option<(f32, f32)> {
-    let k = FOCAL * H / c.zoom;
+/// `focal` must be the same resolved `camera.focal` value the lens shader's `uFocal` uniform
+/// carries for this render — see `settings::CameraLimits::focal`.
+pub fn project(c: &Camera, q: (f32, f32), res_w: f32, res_h: f32, focal: f32) -> Option<(f32, f32)> {
+    let k = focal * H / c.zoom;
     let (lx, ly) = ((q.0 - c.aim.0) / k, (q.1 - c.aim.1) / k);
     let eu = rotate(c, [1.0, 0.0, 0.0]);
     let ev = rotate(c, [0.0, 1.0, 0.0]);
@@ -140,7 +139,7 @@ pub fn project(c: &Camera, q: (f32, f32), res_w: f32, res_h: f32) -> Option<(f32
     if p[2] <= 0.05 {
         return None;
     }
-    Some((FOCAL * p[0] / p[2] * res_h + 0.5 * res_w, FOCAL * p[1] / p[2] * res_h + 0.5 * res_h))
+    Some((focal * p[0] / p[2] * res_h + 0.5 * res_w, focal * p[1] / p[2] * res_h + 0.5 * res_h))
 }
 
 #[cfg(test)]
@@ -160,8 +159,8 @@ mod tests {
         let r = Rect::new(400.0, 300.0, 960.0, 540.0);
         let c = behave(BehaviorKind::Hold { zoom: 1.0 }, &setting(r, 1.0), &dir());
         assert_eq!(c.aim, r.center());
-        let p0 = project(&c, (r.x, r.y), W, H).unwrap();
-        let p1 = project(&c, (r.right(), r.bottom()), W, H).unwrap();
+        let p0 = project(&c, (r.x, r.y), W, H, dir().camera.focal).unwrap();
+        let p1 = project(&c, (r.right(), r.bottom()), W, H, dir().camera.focal).unwrap();
         assert!(p0.0 > 0.0 && p1.0 < W && p0.1 > 0.0 && p1.1 < H, "{p0:?} {p1:?}");
         assert!((p1.0 - p0.0) > 0.85 * W * 0.92 * 0.9, "{}", p1.0 - p0.0);
     }
@@ -169,7 +168,7 @@ mod tests {
     #[test]
     fn the_aim_projects_to_the_frame_centre() {
         let c = Camera { aim: (700.0, 400.0), zoom: 2.0, tilt_x: 0.2, tilt_y: -0.1, roll: 0.05, blur: 0.0 };
-        let p = project(&c, c.aim, W, H).unwrap();
+        let p = project(&c, c.aim, W, H, dir().camera.focal).unwrap();
         assert!((p.0 - W * 0.5).abs() < 1e-2 && (p.1 - H * 0.5).abs() < 1e-2, "{p:?}");
     }
 
@@ -210,7 +209,7 @@ mod tests {
         keep_in_view(&mut c, (960.0, 540.0), &dir().camera);
         assert_eq!(c, before);
         keep_in_view(&mut c, (960.0, 120.0), &dir().camera);
-        let p = project(&c, (960.0, 120.0), W, H).unwrap();
+        let p = project(&c, (960.0, 120.0), W, H, dir().camera.focal).unwrap();
         assert!(p.1 >= H * dir().camera.safe_y - 2.0 && p.1 <= H * (1.0 - dir().camera.safe_y) + 2.0, "{p:?}");
     }
 

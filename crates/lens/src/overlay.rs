@@ -7,14 +7,12 @@ use track::note_name;
 
 const RW: f32 = super::WIDTH as f32;
 const RH: f32 = super::HEIGHT as f32;
-const INK: &str = "#ffffff";
-const LOCK_RED: &str = "#ff3b30";
 
 fn hz(pitch: u8) -> f32 {
     440.0 * 2f32.powf((pitch as f32 - 69.0) / 12.0)
 }
 
-pub fn tracker<'a>(plan: &Plan, s: &FrameState) -> Svgr<'a> {
+pub fn tracker<'a>(plan: &'a Plan, s: &FrameState) -> Svgr<'a> {
     if let Some(ly) = &s.lyric {
         return lyric_tracker(plan, s, ly);
     }
@@ -25,11 +23,13 @@ pub fn tracker<'a>(plan: &Plan, s: &FrameState) -> Svgr<'a> {
     let Some(last) = stem.last_onset_at(s.t) else { return Svgr::empty() };
     let slider = plan.layouts[s.scene].slider;
     let (arm, font) = (plan.dir.tracker.arm, plan.dir.font.clone());
-    let color = if s.look.lock { LOCK_RED } else { INK };
+    let ink = plan.dir.ink.lens_ink.as_str();
+    let color = if s.look.lock { plan.dir.ink.lens_lock.as_str() } else { ink };
+    let focal = plan.dir.camera.focal;
     let at = |i: usize| {
         let n = stem.notes[i];
         let q = panel.note_pos(slider, &plan.timeline, s.t, n.onset, register(stem, n.pitch));
-        project(&s.camera, q, RW, RH)
+        project(&s.camera, q, RW, RH, focal)
     };
 
     let mut items: Vec<Svgr> = vec![fframes::svgr!(
@@ -41,14 +41,14 @@ pub fn tracker<'a>(plan: &Plan, s: &FrameState) -> Svgr<'a> {
     )];
     let trail: Vec<(f32, f32)> = (0..=last).rev().take(plan.dir.tracker.trail + 1).filter_map(at).collect();
     for (k, w) in trail.windows(2).enumerate() {
-        items.push(fframes::svgr!(<line x1={w[0].0} y1={w[0].1} x2={w[1].0} y2={w[1].1} stroke={INK} stroke-width="1.2" opacity="0.7" />));
+        items.push(fframes::svgr!(<line x1={w[0].0} y1={w[0].1} x2={w[1].0} y2={w[1].1} stroke={ink} stroke-width="1.2" opacity="0.7" />));
         let p = ((s.index as f32 * 0.16 + k as f32 * 0.33)).fract();
         let mx = w[0].0 + (w[1].0 - w[0].0) * p;
         let my = w[0].1 + (w[1].1 - w[0].1) * p;
-        items.push(fframes::svgr!(<circle cx={mx} cy={my} r="3.2" fill={INK} />));
+        items.push(fframes::svgr!(<circle cx={mx} cy={my} r="3.2" fill={ink} />));
     }
     for q in &trail {
-        items.push(fframes::svgr!(<circle cx={q.0} cy={q.1} r="3" fill={INK} />));
+        items.push(fframes::svgr!(<circle cx={q.0} cy={q.1} r="3" fill={ink} />));
     }
 
     if let Some(c) = at(last) {
@@ -57,7 +57,7 @@ pub fn tracker<'a>(plan: &Plan, s: &FrameState) -> Svgr<'a> {
         let len = (dx * dx + dy * dy).sqrt().max(1e-3);
         let ex = c.0 + dx / len * 2500.0;
         let ey = c.1 + dy / len * 2500.0;
-        items.push(fframes::svgr!(<line x1={c.0} y1={c.1} x2={ex} y2={ey} stroke={INK} stroke-width="1.0" opacity="0.35" stroke-dasharray="4,8" />));
+        items.push(fframes::svgr!(<line x1={c.0} y1={c.1} x2={ex} y2={ey} stroke={ink} stroke-width="1.0" opacity="0.35" stroke-dasharray="4,8" />));
 
         let grow = plan.dir.tracker.grow + if s.look.lock { 6.0 } else { 0.0 };
         let (x0, y0, x1, y1) = (c.0 - 34.0 - grow, c.1 - 20.0 - grow, c.0 + 34.0 + grow, c.1 + 20.0 + grow);
@@ -85,7 +85,7 @@ pub fn tracker<'a>(plan: &Plan, s: &FrameState) -> Svgr<'a> {
 
 /// A box on every hit of every stem in the scene's layout, held for `tracker.hold_s` while it
 /// shrinks onto the note, with the stem, the pitch and a measured peak when the track has one.
-fn boxes<'a>(plan: &Plan, s: &FrameState) -> Vec<Svgr<'a>> {
+fn boxes<'a>(plan: &'a Plan, s: &FrameState) -> Vec<Svgr<'a>> {
     let tk = &plan.dir.tracker;
     let layout = &plan.layouts[s.scene];
     let mut hits: Vec<(f32, &str, u8, (f32, f32))> = vec![];
@@ -94,7 +94,7 @@ fn boxes<'a>(plan: &Plan, s: &FrameState) -> Vec<Svgr<'a>> {
         let Some(last) = stem.last_onset_at(s.t) else { continue };
         for n in stem.notes[..=last].iter().rev().take_while(|n| s.t - n.onset < tk.hold_s) {
             let q = panel.note_pos(layout.slider, &plan.timeline, s.t, n.onset, register(stem, n.pitch));
-            if let Some(p) = project(&s.camera, q, RW, RH) {
+            if let Some(p) = project(&s.camera, q, RW, RH, plan.dir.camera.focal) {
                 hits.push((s.t - n.onset, panel.stem.as_str(), n.pitch, p));
             }
         }
@@ -106,7 +106,7 @@ fn boxes<'a>(plan: &Plan, s: &FrameState) -> Vec<Svgr<'a>> {
     for (age, name, pitch, p) in hits {
         let u = age / tk.hold_s;
         let fresh = u < 0.2;
-        let color = if fresh { LOCK_RED } else { INK };
+        let color = if fresh { plan.dir.ink.lens_lock.as_str() } else { plan.dir.ink.lens_ink.as_str() };
         let (hw, hh) = (tk.box_w * (1.0 + 0.8 * (1.0 - u)), tk.box_h * (1.0 + 0.8 * (1.0 - u)));
         let alpha = 0.85 * (1.0 - u * u);
         let label = if fresh {
@@ -129,9 +129,10 @@ fn boxes<'a>(plan: &Plan, s: &FrameState) -> Vec<Svgr<'a>> {
 /// The camera's tracker on a lyric line: links through the newest words in reading order with a
 /// dot running along each, brackets and a labelled coordinate on the newest word, and the boxes
 /// of the notes under it.
-fn lyric_tracker<'a>(plan: &Plan, s: &FrameState, ly: &LyricState) -> Svgr<'a> {
+fn lyric_tracker<'a>(plan: &'a Plan, s: &FrameState, ly: &LyricState) -> Svgr<'a> {
     let cfg = &plan.dir.lyric;
-    let color = if s.look.lock { LOCK_RED } else { INK };
+    let ink = plan.dir.ink.lens_ink.as_str();
+    let color = if s.look.lock { plan.dir.ink.lens_lock.as_str() } else { ink };
     let font = plan.dir.font.clone();
     let pts: Vec<(String, (f32, f32), f32)> = ly
         .words
@@ -141,7 +142,7 @@ fn lyric_tracker<'a>(plan: &Plan, s: &FrameState, ly: &LyricState) -> Svgr<'a> {
         .rev()
         .filter_map(|&(start, len)| {
             let c = ly.word_center((start, len));
-            project(&s.camera, c, RW, RH).map(|p| {
+            project(&s.camera, c, RW, RH, plan.dir.camera.focal).map(|p| {
                 let word: String = ly.text.chars().skip(start).take(len).collect();
                 (word, p, len as f32 * ly.advance() * s.camera.zoom)
             })
@@ -156,17 +157,17 @@ fn lyric_tracker<'a>(plan: &Plan, s: &FrameState, ly: &LyricState) -> Svgr<'a> {
     )];
     for (k, w) in pts.windows(2).enumerate() {
         let (a, b) = (w[0].1, w[1].1);
-        items.push(fframes::svgr!(<line x1={a.0} y1={a.1} x2={b.0} y2={b.1} stroke={INK} stroke-width="1.4" opacity="0.8" />));
+        items.push(fframes::svgr!(<line x1={a.0} y1={a.1} x2={b.0} y2={b.1} stroke={ink} stroke-width="1.4" opacity="0.8" />));
         let p = (s.index as f32 * 0.16 + k as f32 * 0.33).fract();
-        items.push(fframes::svgr!(<circle cx={a.0 + (b.0 - a.0) * p} cy={a.1 + (b.1 - a.1) * p} r="3.4" fill={INK} />));
+        items.push(fframes::svgr!(<circle cx={a.0 + (b.0 - a.0) * p} cy={a.1 + (b.1 - a.1) * p} r="3.4" fill={ink} />));
     }
     for (_, p, _) in &pts {
-        items.push(fframes::svgr!(<circle cx={p.0} cy={p.1} r="3" fill={INK} />));
+        items.push(fframes::svgr!(<circle cx={p.0} cy={p.1} r="3" fill={ink} />));
     }
     if let Some((word, c, w)) = pts.last() {
         let (dx, dy) = (c.0 - RW * 0.5, c.1 - RH * 0.5);
         let len = (dx * dx + dy * dy).sqrt().max(1e-3);
-        items.push(fframes::svgr!(<line x1={c.0} y1={c.1} x2={c.0 + dx / len * 2500.0} y2={c.1 + dy / len * 2500.0} stroke={INK} stroke-width="1.0" opacity="0.35" stroke-dasharray="4,8" />));
+        items.push(fframes::svgr!(<line x1={c.0} y1={c.1} x2={c.0 + dx / len * 2500.0} y2={c.1 + dy / len * 2500.0} stroke={ink} stroke-width="1.0" opacity="0.35" stroke-dasharray="4,8" />));
         let pad = plan.dir.tracker.grow + if s.look.lock { 6.0 } else { 0.0 };
         let (hw, hh) = (w * 0.5 + pad + 8.0, ly.size * 0.55 * s.camera.zoom + pad);
         let (x0, y0, x1, y1) = (c.0 - hw, c.1 - hh, c.0 + hw, c.1 + hh);
@@ -181,21 +182,18 @@ fn lyric_tracker<'a>(plan: &Plan, s: &FrameState, ly: &LyricState) -> Svgr<'a> {
     fframes::svgr!(<g opacity={0.92 * (1.0 - s.look.out)}>{items}</g>)
 }
 
-const METER_X: f32 = 1290.0;
-const METER_Y: f32 = 70.0;
-const METER_W: f32 = 300.0;
-const METER_H: f32 = 14.0;
-
 /// The scene counter, time, BPM, bar, loudness meter and caption line: composited sharp over the
 /// shaded image, the same way as the tracker, since this is information that must stay legible
 /// rather than texture that goes through the display's LED model. It used to be drawn in the flat
 /// pass and smeared along with everything else once a scene's camera zoomed out far enough to
 /// shrink it below the display's subpixel cell size.
-pub fn hud<'a>(plan: &Plan, s: &FrameState) -> Svgr<'a> {
+pub fn hud<'a>(plan: &'a Plan, s: &FrameState) -> Svgr<'a> {
     let sc = &plan.scenes[s.scene];
     let v = &plan.vocab;
     let tr = plan.track();
     let c = &plan.dir.chrome;
+    let ink = &plan.dir.ink;
+    let m = &plan.dir.meter;
     let font = plan.dir.font.clone();
     let bar = ((s.t - tr.drop_t) / tr.bar_s).floor() as i32 + 1;
     // Loudness in dBFS, held inside the meter range; a missing or non-finite value reads as the
@@ -207,14 +205,14 @@ pub fn hud<'a>(plan: &Plan, s: &FrameState) -> Svgr<'a> {
     };
 
     let mut items: Vec<Svgr> = vec![
-        fframes::svgr!(<text x="90" y="84" font-family={font.clone()} font-size="20" letter-spacing="4" fill="#e6e6e6">{format!("{:02}.{:02} {:05.2} s", sc.index + 1, plan.scenes.len(), s.t)}</text>),
-        fframes::svgr!(<text x="1830" y="84" font-family={font.clone()} font-size="16" text-anchor="end" fill="#999999">{format!("{:.1} BPM · bar {}", tr.bpm, bar.max(0))}</text>),
+        fframes::svgr!(<text x="90" y="84" font-family={font.clone()} font-size="20" letter-spacing="4" fill={ink.lens_hud_text.as_str()}>{format!("{:02}.{:02} {:05.2} s", sc.index + 1, plan.scenes.len(), s.t)}</text>),
+        fframes::svgr!(<text x="1830" y="84" font-family={font.clone()} font-size="16" text-anchor="end" fill={ink.lens_hud_secondary.as_str()}>{format!("{:.1} BPM · bar {}", tr.bpm, bar.max(0))}</text>),
     ];
 
     if c.meter {
         let frac = (db - c.meter_floor_db) / (c.meter_ceil_db - c.meter_floor_db);
-        items.push(fframes::svgr!(<rect x={METER_X} y={METER_Y} width={METER_W} height={METER_H} fill="none" stroke="#333333" stroke-width="1.5" />));
-        items.push(fframes::svgr!(<rect x={METER_X} y={METER_Y} width={(frac * METER_W).max(0.5)} height={METER_H} fill="#9a9a9a" />));
+        items.push(fframes::svgr!(<rect x={m.x} y={m.y} width={m.w} height={m.h} fill="none" stroke={ink.lens_rule.as_str()} stroke-width="1.5" />));
+        items.push(fframes::svgr!(<rect x={m.x} y={m.y} width={(frac * m.w).max(0.5)} height={m.h} fill={ink.lens_label.as_str()} />));
     }
 
     let label = match &sc.text {
@@ -228,7 +226,7 @@ pub fn hud<'a>(plan: &Plan, s: &FrameState) -> Svgr<'a> {
             v.palettes[sc.palette].name
         ),
     };
-    let label_fill = if sc.text.is_some() { "#d9d9d9" } else { "#8c8c8c" };
+    let label_fill = if sc.text.is_some() { ink.lens_hud_highlight.as_str() } else { ink.lens_hud_muted.as_str() };
     items.push(fframes::svgr!(<text x="90" y="1008" font-family={font.clone()} font-size="14" letter-spacing="2" fill={label_fill}>{label}</text>));
 
     if c.status {
@@ -249,10 +247,10 @@ pub fn hud<'a>(plan: &Plan, s: &FrameState) -> Svgr<'a> {
             s.index + 1,
             plan.frames()
         );
-        items.push(fframes::svgr!(<text x="1830" y="1008" font-family={font} font-size="14" letter-spacing="1" text-anchor="end" fill="#8c8c8c">{text}</text>));
+        items.push(fframes::svgr!(<text x="1830" y="1008" font-family={font} font-size="14" letter-spacing="1" text-anchor="end" fill={ink.lens_hud_muted.as_str()}>{text}</text>));
     } else {
         let axes_text = format!("edge {:+.2} · energy {:+.2}", sc.axes.edge, sc.axes.energy);
-        items.push(fframes::svgr!(<text x="1830" y="1008" font-family={font} font-size="14" text-anchor="end" fill="#8c8c8c">{axes_text}</text>));
+        items.push(fframes::svgr!(<text x="1830" y="1008" font-family={font} font-size="14" text-anchor="end" fill={ink.lens_hud_muted.as_str()}>{axes_text}</text>));
     }
 
     fframes::svgr!(<g>{items}</g>)

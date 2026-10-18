@@ -7,13 +7,13 @@
 //! unusual amount of playing compared with its own average. The vocabulary entry for every
 //! other choice is the one nearest to the scene's measured feel.
 
-use crate::settings::{Attention, CameraLimits, Chrome, Lyric, Marks, Priority, Shots, Stage, Tracker};
+use crate::settings::{Attention, CameraLimits, Chrome, Ink, Lyric, Marks, Meter, Priority, Shots, Stage, Tracker};
 use crate::vocab::{At, Vocabulary, nearest};
 use serde::{Deserialize, Serialize};
 use signals::{Axes, FeelModel, Selection};
 use track::{FPS, Track};
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Direction {
     pub phrase_bars: u32,
@@ -44,6 +44,8 @@ pub struct Direction {
     pub tracker: Tracker,
     pub shots: Shots,
     pub chrome: Chrome,
+    pub ink: Ink,
+    pub meter: Meter,
     #[serde(default)]
     pub lyric: Lyric,
     #[serde(default)]

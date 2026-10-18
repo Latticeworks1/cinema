@@ -22,19 +22,6 @@ const FFT_SIZE: usize = 1024;
 const FFT_SMOOTH: usize = 1;
 /// Added to a band's magnitude before the logarithm, so silence maps to a finite level.
 const FFT_EPS: f32 = 1e-6;
-/// Columns of the waveform are merged into groups once they are thinner than this many pixels.
-/// Display range of the loudness meter in dBFS.
-
-/// Band rows, in logical pixels below the top of the band.
-const RULER_ROW: f32 = 22.0;
-const TICK_BEAT: f32 = 8.0;
-const TICK_BAR: f32 = 16.0;
-
-const LIT: &str = "#e6e6e6";
-const DIM: &str = "#666666";
-const RULE: &str = "#333333";
-const LABEL: &str = "#9a9a9a";
-const METER_FILL: &str = "#9a9a9a";
 
 /// The time window of the band, mapped to logical x.
 struct Window {
@@ -123,13 +110,13 @@ pub fn band(s: &mut String, plan: &Plan, st: &FrameState, bands: Option<&[f32]>)
 
     s.push_str("<g id='band'>");
     if c.waveform {
-        waveform(s, tr, st, &win, top + RULER_ROW + 4.0, bottom, c.merge_px);
+        waveform(s, plan, tr, st, &win, top + c.ruler_row + 4.0, bottom, c.merge_px);
     }
     if c.ruler {
         ruler(s, plan, &win, top);
     }
     if let Some(levels) = fft {
-        spectrum_strip(s, levels, stage.x + stage.w - fft_w, fft_w, top, bottom);
+        spectrum_strip(s, plan, levels, stage.x + stage.w - fft_w, fft_w, top, bottom);
     }
     write!(
         s,
@@ -143,13 +130,15 @@ pub fn band(s: &mut String, plan: &Plan, st: &FrameState, bands: Option<&[f32]>)
 /// Beat ticks from the drop, a longer tick and a label on every bar.
 fn ruler(s: &mut String, plan: &Plan, win: &Window, top: f32) {
     let tr = plan.track();
+    let c = &plan.dir.chrome;
+    let ink = &plan.dir.ink;
     let beat = 60.0 / tr.bpm;
     let bpb = beats_per_bar(tr);
-    let base = top + RULER_ROW;
+    let base = top + c.ruler_row;
     write!(
         s,
-        "<g id='ruler'><line x1='{:.1}' y1='{base:.1}' x2='{:.1}' y2='{base:.1}' stroke='{RULE}' stroke-width='1.5'/>",
-        win.x0, win.x1
+        "<g id='ruler'><line x1='{:.1}' y1='{base:.1}' x2='{:.1}' y2='{base:.1}' stroke='{}' stroke-width='1.5'/>",
+        win.x0, win.x1, ink.flat_rule
     )
     .unwrap();
     let k_lo = ((win.t_lo - tr.drop_t) / beat).floor() as i64;
@@ -164,7 +153,7 @@ fn ruler(s: &mut String, plan: &Plan, win: &Window, top: f32) {
             continue;
         }
         let bar = k.rem_euclid(bpb as i64) == 0;
-        let len = if bar { TICK_BAR } else { TICK_BEAT };
+        let len = if bar { c.tick_bar } else { c.tick_beat };
         write!(
             s,
             "<line x1='{x:.1}' y1='{:.1}' x2='{x:.1}' y2='{base:.1}' stroke='{}' stroke-width='1.5'/>",
@@ -176,9 +165,10 @@ fn ruler(s: &mut String, plan: &Plan, win: &Window, top: f32) {
         if bar && bar_no >= 1 {
             write!(
                 s,
-                "<text x='{:.1}' y='{:.1}' font-size='15' fill='{LABEL}'>bar {bar_no}   {t:.1} s</text>",
+                "<text x='{:.1}' y='{:.1}' font-size='15' fill='{}'>bar {bar_no}   {t:.1} s</text>",
                 x + 6.0,
-                base - 4.0
+                base - 4.0,
+                ink.flat_label
             )
             .unwrap();
         }
@@ -188,7 +178,8 @@ fn ruler(s: &mut String, plan: &Plan, win: &Window, top: f32) {
 
 /// Master waveform. Columns closer together than `merge_px` are merged into groups, each drawn at
 /// its peak, so the shape stays solid at every zoom. Columns before the playhead are lit.
-fn waveform(s: &mut String, tr: &Track, st: &FrameState, win: &Window, y0: f32, y1: f32, merge_px: f32) {
+fn waveform(s: &mut String, plan: &Plan, tr: &Track, st: &FrameState, win: &Window, y0: f32, y1: f32, merge_px: f32) {
+    let ink = &plan.dir.ink;
     let cps = tr.waveform_cols_per_s;
     let n = tr.waveform.len();
     if n == 0 || !(cps > 0.0) {
@@ -201,7 +192,14 @@ fn waveform(s: &mut String, tr: &Track, st: &FrameState, win: &Window, y0: f32, 
     let first = ((win.t_lo * cps).floor().max(0.0) as usize) / stride * stride;
     let last = ((win.t_hi() * cps).ceil().max(0.0) as usize).min(n);
     let w = col_px * stride as f32;
-    write!(s, "<g id='wave'><rect x='{:.1}' y='{mid:.1}' width='{:.1}' height='1' fill='{RULE}'/>", win.x0, win.x1 - win.x0).unwrap();
+    write!(
+        s,
+        "<g id='wave'><rect x='{:.1}' y='{mid:.1}' width='{:.1}' height='1' fill='{}'/>",
+        win.x0,
+        win.x1 - win.x0,
+        ink.flat_rule
+    )
+    .unwrap();
     for g0 in (first..last).step_by(stride) {
         let t = g0 as f32 / cps;
         let x = win.x_of(t);
@@ -210,7 +208,7 @@ fn waveform(s: &mut String, tr: &Track, st: &FrameState, win: &Window, y0: f32, 
         }
         let peak = tr.waveform[g0..(g0 + stride).min(n)].iter().cloned().fold(0.0f32, f32::max);
         let h = 0.5 + peak.clamp(0.0, 1.0) * half;
-        let fill = if t <= st.t { LIT } else { DIM };
+        let fill = if t <= st.t { &ink.flat_lit } else { &ink.flat_dim };
         write!(
             s,
             "<rect x='{x:.1}' y='{:.1}' width='{:.1}' height='{:.1}' fill='{fill}'/>",
@@ -224,7 +222,8 @@ fn waveform(s: &mut String, tr: &Track, st: &FrameState, win: &Window, y0: f32, 
 }
 
 /// The spectrum, one bar per band stacked from the bottom of the band, growing to the right.
-fn spectrum_strip(s: &mut String, levels: &[f32], x0: f32, w: f32, top: f32, bottom: f32) {
+fn spectrum_strip(s: &mut String, plan: &Plan, levels: &[f32], x0: f32, w: f32, top: f32, bottom: f32) {
+    let fill = &plan.dir.ink.flat_meter_fill;
     let n = levels.len().max(1);
     let step = (bottom - top) / n as f32;
     write!(s, "<g id='fft'>").unwrap();
@@ -232,7 +231,7 @@ fn spectrum_strip(s: &mut String, levels: &[f32], x0: f32, w: f32, top: f32, bot
         let y = bottom - (i + 1) as f32 * step + 1.5;
         write!(
             s,
-            "<rect x='{x0:.1}' y='{y:.1}' width='{:.1}' height='{:.1}' fill='{METER_FILL}'/>",
+            "<rect x='{x0:.1}' y='{y:.1}' width='{:.1}' height='{:.1}' fill='{fill}'/>",
             (v * w).max(0.5),
             (step - 3.0).max(0.5)
         )

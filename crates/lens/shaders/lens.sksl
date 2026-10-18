@@ -9,6 +9,7 @@ uniform float iTime;
 
 uniform float2 uAim;
 uniform float uZoom;
+uniform float uFocal;
 uniform float3 uRot;
 uniform float2 uFocus;
 uniform float uBlur;
@@ -55,7 +56,6 @@ uniform float4 uMat7;
 const float FLAT_SCALE = 2.0;
 const float LW = 1920.0;
 const float LH = 1080.0;
-const float FOCAL = 1.7;
 const int TAPS = 36;
 const int GLOW_TAPS = 16;
 // Blur radius, in display cells, below which one tap is enough and above which all are used.
@@ -170,7 +170,7 @@ half4 main(float2 coord) {
 
     // Perspective: a ray per pixel hits the tilted screen plane.
     float2 s = (px - 0.5 * res) / res.y;
-    float3 d = float3(s.x, s.y, FOCAL);
+    float3 d = float3(s.x, s.y, uFocal);
     float3x3 R = rotation();
     float3 eu = R * float3(1.0, 0.0, 0.0);
     float3 ev = R * float3(0.0, 1.0, 0.0);
@@ -180,7 +180,7 @@ half4 main(float2 coord) {
     if (dn <= 0.0001) { return half4(half3(pal(0.0) * (1.0 - uOut)), 1.0); }
     float3 hit3 = d * (dot(p0, n) / dn);
     float2 local = float2(dot(hit3 - p0, eu), dot(hit3 - p0, ev));
-    float K = FOCAL * LH / uZoom;
+    float K = uFocal * LH / uZoom;
     float2 base = uAim + local * K;
     float z = hit3.z;
 

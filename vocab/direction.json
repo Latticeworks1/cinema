@@ -20,10 +20,19 @@
   "attention": { "lead_s": 0.15, "fall_s": 0.4, "notes": 8 },
   "priority": { "start": 9, "impact": 5, "drop": 4, "phrase": 3, "enter": 2, "exit": 1 },
   "stage": { "x": 90, "y": 120, "w": 1740, "h": 700, "gap": 12, "lane_emphasis": 2.2, "hero_share": 0.62, "grid_cols": 3, "pad": 14 },
-  "camera": { "stage_slack": 0.9, "max_zoom": 8.0, "safe_x": 0.10, "safe_y": 0.14 },
+  "camera": { "stage_slack": 0.9, "max_zoom": 8.0, "safe_x": 0.10, "safe_y": 0.14, "focal": 1.7 },
   "marks": { "note_h": 18, "note_min_len": 18, "ahead": 0.45, "grid": 0.16, "ring_stagger_s": 0.12 },
   "tracker": { "trail": 4, "arm": 18, "grow": 8, "hold_s": 0.55, "box_cap": 24, "box_w": 30, "box_h": 18 },
   "shots": { "beats": 2, "mix": 0.6, "whip_s": 0.18, "zoom": 1.05, "push": 0.1, "tilt": 0.07, "blur": 0.3, "wide": 0.2 },
   "chrome": {"ruler": true, "waveform": true, "fft": true, "meter": true, "status": true, "band_y": 836, "band_h": 124, "fft_w": 120, "fft_bands": 48, "fft_lo_hz": 40, "fft_hi_hz": 16000, "fft_db_floor": -6, "fft_db_ceil": 48,
-             "band_span_panels": 2.0, "merge_px": 1.6, "meter_floor_db": -48, "meter_ceil_db": 0}
+             "band_span_panels": 2.0, "merge_px": 1.6, "meter_floor_db": -48, "meter_ceil_db": 0,
+             "ruler_row": 22.0, "tick_beat": 8.0, "tick_bar": 16.0},
+  "meter": { "x": 1290.0, "y": 70.0, "w": 300.0, "h": 14.0 },
+  "ink": {
+    "flat_lit": "#e6e6e6", "flat_dim": "#666666", "flat_rule": "#333333", "flat_label": "#9a9a9a",
+    "flat_meter_fill": "#9a9a9a", "flat_lock": "#ff0000",
+    "lens_ink": "#ffffff", "lens_lock": "#ff3b30", "lens_hud_text": "#e6e6e6",
+    "lens_hud_secondary": "#999999", "lens_hud_highlight": "#d9d9d9", "lens_hud_muted": "#8c8c8c",
+    "lens_rule": "#333333", "lens_label": "#9a9a9a"
+  }
 }

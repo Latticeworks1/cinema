@@ -266,18 +266,51 @@ impl Packet {
 
     /// The text of an authored file with this packet's overrides applied.
     pub fn section(&self, s: Section) -> Result<String, String> {
+        Ok(self.section_value(s)?.to_string())
+    }
+
+    /// `section`, without serializing back to text — for a caller that goes on to inspect or
+    /// further merge the resolved JSON itself (a runtime editor's `state()`, say) rather than
+    /// handing it straight to a struct's own deserializer.
+    pub fn section_value(&self, s: Section) -> Result<Value, String> {
         let file = self.vocab.join(format!("{}.json", s.name()));
         let text = fs::read_to_string(&file).map_err(|e| format!("{}: {e}", file.display()))?;
         let mut value: Value = serde_json::from_str(&text).map_err(|e| format!("{}: {e}", file.display()))?;
         if let Some(over) = self.set.get(s.name()) {
             merge(&mut value, over);
         }
-        Ok(value.to_string())
+        Ok(value)
     }
 
     /// Top-level keys this packet overrides in a section.
     pub fn overrides(&self, s: Section) -> usize {
         self.set.get(s.name()).and_then(Value::as_object).map_or(0, |o| o.len())
+    }
+
+    /// Every section this packet overrides, keyed by [`Section::name`] — what a packet file's
+    /// own `set` holds, after `extends` resolution. A runtime editor rebuilds a packet with its
+    /// edits by writing this out alongside `{"extends": self.path, "name": self.name}`.
+    pub fn all_overrides(&self) -> &BTreeMap<String, Value> {
+        &self.set
+    }
+
+    /// Writes `value` at `path` (dot-separated, e.g. `"ink.flat_lock"`) into this packet's own
+    /// override of `section`, creating intermediate objects as needed. Takes effect the next
+    /// time `section`/`section_value` is resolved; does not touch the file on disk.
+    pub fn set_override(&mut self, section: Section, path: &str, value: Value) {
+        let mut node = self.set.entry(section.name().to_string()).or_insert_with(|| Value::Object(Default::default()));
+        let mut parts = path.split('.').peekable();
+        while let Some(key) = parts.next() {
+            if !node.is_object() {
+                *node = Value::Object(Default::default());
+            }
+            let obj = node.as_object_mut().expect("just made an object above");
+            if parts.peek().is_none() {
+                obj.insert(key.to_string(), value);
+                return;
+            }
+            node = obj.entry(key.to_string()).or_insert_with(|| Value::Object(Default::default()));
+        }
     }
 }
 

@@ -2,10 +2,10 @@
 //! the marks drawn in the flat pass. They are the groups of `vocab/direction.json`.
 
 use crate::geometry::Rect;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 /// How the camera's point of attention follows the leading stem's recent notes.
-#[derive(Clone, Copy, Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Attention {
     /// How far ahead of a note's onset the camera starts to turn towards it, seconds.
@@ -17,7 +17,7 @@ pub struct Attention {
 }
 
 /// The area of the 1920x1080 screen the panels share, and how a layout rule divides it.
-#[derive(Clone, Copy, Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Stage {
     pub x: f32,
@@ -40,7 +40,7 @@ impl Stage {
     }
 }
 
-#[derive(Clone, Copy, Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct CameraLimits {
     /// Share of the half-view kept inside the stage when the camera is tilted.
@@ -49,10 +49,13 @@ pub struct CameraLimits {
     /// Margins, as shares of the frame, inside which the subject of attention must stay.
     pub safe_x: f32,
     pub safe_y: f32,
+    /// Focal length shared by the CPU projection (`camera::project`) and the lens shader's own
+    /// projection (`uFocal` in lens.sksl); the two must always read the same resolved value.
+    pub focal: f32,
 }
 
 /// Priorities of the boundary kinds; the thinning keeps higher ones.
-#[derive(Clone, Copy, Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Priority {
     pub start: u8,
@@ -64,7 +67,7 @@ pub struct Priority {
 }
 
 /// Sizes and levels of the marks the flat pass draws, in logical pixels and 0..1.
-#[derive(Clone, Copy, Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Marks {
     pub note_h: f32,
@@ -79,7 +82,7 @@ pub struct Marks {
 /// The chrome band under the stage: the time ruler, the waveform, the spectrum, the loudness
 /// meter and the status line. Each part can be switched off; the band geometry is in screen
 /// pixels of the 1920x1080 frame.
-#[derive(Clone, Copy, Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Chrome {
     pub ruler: bool,
@@ -106,10 +109,51 @@ pub struct Chrome {
     /// Loudness mapped to an empty and a full level meter, dBFS.
     pub meter_floor_db: f32,
     pub meter_ceil_db: f32,
+    /// Row of the beat/bar ruler, below the top of the band.
+    pub ruler_row: f32,
+    /// Tick height of a beat and of a bar on the ruler.
+    pub tick_beat: f32,
+    pub tick_bar: f32,
+}
+
+/// Position and size of the level meter composited sharp over the lens pass (see
+/// `lens::overlay::hud`). HUD layout, not tracker behaviour, so it is its own group rather than
+/// folded into `Tracker`.
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct Meter {
+    pub x: f32,
+    pub y: f32,
+    pub w: f32,
+    pub h: f32,
+}
+
+/// Colors of the flat pass's own marks and of the lens overlay composited sharp over the shaded
+/// image. Kept independently configurable even where today's values happen to agree: the two
+/// layers play different rendering roles (`flat_*` participates in the filmed SVG and goes
+/// through the lens shader's palette/LED model; `lens_*` is composited afterward for legibility,
+/// see the comment at the end of `flat::chrome`).
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct Ink {
+    pub flat_lit: String,
+    pub flat_dim: String,
+    pub flat_rule: String,
+    pub flat_label: String,
+    pub flat_meter_fill: String,
+    pub flat_lock: String,
+    pub lens_ink: String,
+    pub lens_lock: String,
+    pub lens_hud_text: String,
+    pub lens_hud_secondary: String,
+    pub lens_hud_highlight: String,
+    pub lens_hud_muted: String,
+    pub lens_rule: String,
+    pub lens_label: String,
 }
 
 /// The camera's own tracker drawn over the filmed screen.
-#[derive(Clone, Copy, Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Tracker {
     /// Notes joined by links behind the newest one.
@@ -126,7 +170,7 @@ pub struct Tracker {
 
 /// Camera shots inside a scene: every `beats` beats after the drop the camera whips to another
 /// panel and pushes in, with a tilt flick on the move.
-#[derive(Clone, Copy, Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Shots {
     pub beats: f32,
@@ -144,7 +188,7 @@ pub struct Shots {
 
 /// Lyric shots: each line of a cue's text becomes its own shot, with the line as the subject.
 /// `size` 0 turns the layer off and the scene's own camera is used.
-#[derive(Clone, Copy, Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct Lyric {
     /// Font size of the line in logical pixels; its glyph advance is 0.6 of it.
@@ -179,6 +223,8 @@ pub struct Lyric {
     pub min_s: f32,
     /// Seconds from the lock to the line's last glyph leaving (0 keeps it until the next shot).
     pub hold_s: f32,
+    /// Glyph advance of the monospace font, as a share of its size.
+    pub advance: f32,
 }
 
 impl Default for Lyric {
@@ -203,6 +249,7 @@ impl Default for Lyric {
             trail: 3,
             min_s: 0.8,
             hold_s: 0.0,
+            advance: 0.6,
         }
     }
 }

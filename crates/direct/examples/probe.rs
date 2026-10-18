@@ -9,7 +9,7 @@ fn main() {
     println!("frame {f} t={:.3} scene {} [{:.2},{:.2}] lead {} behavior {} layout {}", s.t, sc.index, sc.t0, sc.t1, sc.dominant,
         plan.vocab.behaviors[sc.behavior].name, plan.vocab.layouts[sc.layout].name);
     println!("camera {:?}", s.camera);
-    println!("focus {:?} -> screen {:?}", s.focus, project(&s.camera, s.focus, W, H));
+    println!("focus {:?} -> screen {:?}", s.focus, project(&s.camera, s.focus, W, H, plan.dir.camera.focal));
     if let Some(p) = plan.lead_panel(s.scene) { println!("lead panel {:?}", p.rect); }
     println!("look {:?}", s.look);
 }

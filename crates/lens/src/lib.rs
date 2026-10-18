@@ -58,6 +58,7 @@ impl LensVideo {
             .float("uTear", l.tear)
             .float("uCut", l.cut)
             .float("uOut", l.out)
+            .float("uFocal", self.plan.dir.camera.focal)
             .float("uBloom", l.bloom)
             .float("uLed", l.led)
             .float("uAberr", l.aberration)

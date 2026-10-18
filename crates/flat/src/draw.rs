@@ -4,7 +4,6 @@ use std::fmt::Write;
 use track::{FPS, Stem, note_name};
 
 const SCALE: f32 = 2.0;
-const RED: &str = "#ff0000";
 const EMIT_STREAM: u64 = 20;
 
 pub(crate) fn gray(v: f32) -> String {
@@ -279,11 +278,12 @@ fn lock_marker(s: &mut String, plan: &Plan, st: &FrameState) {
     let h = plan.dir.marks.note_h * 1.8;
     write!(
         s,
-        "<rect x='{:.1}' y='{:.1}' width='{:.1}' height='{:.1}' fill='none' stroke='{RED}' stroke-width='3'/>",
+        "<rect x='{:.1}' y='{:.1}' width='{:.1}' height='{:.1}' fill='none' stroke='{}' stroke-width='3'/>",
         p.0 - h,
         p.1 - h,
         h * 2.0 + 24.0,
-        h * 2.0
+        h * 2.0,
+        plan.dir.ink.flat_lock
     )
     .unwrap();
 }
@@ -341,7 +341,7 @@ fn lyric(s: &mut String, plan: &Plan, ly: &direct::LyricState) {
         let pad = size * 0.2 * grow;
         let (x, y) = (x0 + start as f32 * adv - pad, base - size * 0.82 - pad);
         let (w, h) = (len as f32 * adv + 2.0 * pad, size * 1.0 + 2.0 * pad);
-        let (stroke, sw) = if newest && ly.locked { (RED, 3.0) } else { ("#ffffff", 1.4) };
+        let (stroke, sw) = if newest && ly.locked { (plan.dir.ink.flat_lock.as_str(), 3.0) } else { ("#ffffff", 1.4) };
         let hatch = if newest { 0.9 } else { 0.5 };
         write!(
             s,

@@ -457,6 +457,9 @@ impl Plan {
                 "materials": v.stems.iter().zip(&s.material_by_stem).map(|(d, i)| (d.name.clone(), v.materials[*i].name.clone())).collect::<std::collections::BTreeMap<_, _>>(),
                 "text": s.text,
             })).collect::<Vec<_>>(),
+            "lyrics": self.lyrics.iter().map(|l| serde_json::json!({
+                "scene": l.scene, "text": l.text, "t0": l.t0, "t1": l.t1, "word_times": l.word_times,
+            })).collect::<Vec<_>>(),
         })
     }
 }
@@ -481,7 +484,7 @@ mod tests {
             assert!([c.aim.0, c.aim.1, c.zoom, c.tilt_x, c.tilt_y, c.roll, c.blur].iter().all(|v| v.is_finite()), "frame {f}");
             let l = s.look;
             assert!([l.bloom, l.led, l.aberration, l.grain, l.vignette, l.blur, l.tear, l.punch, l.cut, l.out].iter().all(|v| v.is_finite()), "frame {f}");
-            let q = project(&c, s.focus, W, H).expect("focus is in front of the camera");
+            let q = project(&c, s.focus, W, H, p.dir.camera.focal).expect("focus is in front of the camera");
             assert!(q.0 > 0.0 && q.0 < W && q.1 > 0.0 && q.1 < H, "frame {f}: focus at {q:?}");
         }
     }

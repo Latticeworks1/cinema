@@ -9,9 +9,6 @@ use crate::geometry::{W, ease_out, rnd};
 use crate::scenes::{Direction, Scene};
 use track::{FPS, Track};
 
-/// Glyph advance of the monospace font as a share of its size.
-pub const ADVANCE: f32 = 0.6;
-
 #[derive(Clone, Debug)]
 pub struct LyricLine {
     pub scene: usize,
@@ -32,6 +29,8 @@ pub struct LyricState {
     pub typed: usize,
     pub len: usize,
     pub size: f32,
+    /// Resolved `direction.lyric.advance`: glyph advance of the monospace font as a share of `size`.
+    pub advance_ratio: f32,
     pub x0: f32,
     pub baseline: f32,
     /// Seconds into the shot, and 0..1 through it.
@@ -47,7 +46,7 @@ pub struct LyricState {
 
 impl LyricState {
     pub fn advance(&self) -> f32 {
-        self.size * ADVANCE
+        self.size * self.advance_ratio
     }
 
     /// Centre of a word in logical pixels.
@@ -174,13 +173,14 @@ pub fn state(lines: &[LyricLine], d: &Direction, index: usize) -> Option<LyricSt
     let lock_at = ((l.t0 + done + ly.lock_delay_s) * FPS as f32).round() as usize;
     let locked = index >= lock_at && index < lock_at + d.lock_frames;
     let grow = ((age - done) / (ly.lock_delay_s + 0.2)).clamp(0.0, 1.0);
-    let x0 = W * 0.5 - len as f32 * ly.size * ADVANCE * 0.5;
+    let x0 = W * 0.5 - len as f32 * ly.size * ly.advance * 0.5;
     Some(LyricState {
         line: i,
         text: l.text.clone(),
         typed,
         len,
         size: ly.size,
+        advance_ratio: ly.advance,
         x0,
         baseline: ly.y,
         age,
