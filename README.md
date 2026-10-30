@@ -1,5 +1,8 @@
 # cinema
 
+For new productions using this architecture, see the [reusable fframes
+production system](docs/REUSABLE_FFRAMES_SYSTEM.md).
+
 cinema turns a transcribed recording into a short film in which every camera move, cut, colour, shape and display texture is derived from the music. The input is one recording and its multitrack MIDI transcription. The output is a 1920x1080 video with the original audio, rendered by fframes on Skia.
 
 ## Principles

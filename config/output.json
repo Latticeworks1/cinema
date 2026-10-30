@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "fps": 30,
+  "logical_width": 1920,
+  "logical_height": 1080,
+  "output_width": 1920,
+  "output_height": 1080,
+  "flat_scale": 2,
+  "flat_encoder": {
+    "codec": "libx264",
+    "crf": "8",
+    "preset": "fast",
+    "tune": "animation"
+  },
+  "lens_encoder": {
+    "codec": "libx264",
+    "crf": "16",
+    "preset": "slow",
+    "tune": "grain"
+  }
+}

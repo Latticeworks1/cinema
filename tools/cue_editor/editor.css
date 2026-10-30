@@ -1,0 +1,58 @@
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; height: 100%;
+  background: #121212; color: #ddd;
+  font: 13px/1.4 -apple-system, "SF Mono", Menlo, monospace;
+}
+
+#topbar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px; background: #1b1b1b; border-bottom: 1px solid #333;
+  position: sticky; top: 0; z-index: 10;
+}
+#topbar button {
+  background: #2a2a2a; color: #eee; border: 1px solid #444; border-radius: 4px;
+  padding: 4px 10px; cursor: pointer; font: inherit;
+}
+#topbar button:hover { background: #333; }
+#saveBtn { margin-left: auto; }
+#saveBtn.dirty { background: #4a3a00; border-color: #c89000; }
+.sep { width: 1px; height: 18px; background: #333; }
+#timeReadout { font-variant-numeric: tabular-nums; color: #9c9; min-width: 11ch; }
+.warn { color: #ffb347; max-width: 46ch; }
+#status { color: #8c8; }
+#status.err { color: #e66; }
+
+#scroller { overflow-x: auto; overflow-y: hidden; }
+#track { position: relative; height: 230px; }
+
+#ruler, #waveform { position: absolute; left: 0; display: block; }
+#ruler { top: 0; height: 22px; }
+#waveform { top: 22px; height: 70px; }
+#cueLayer, #wordLayer { position: absolute; left: 0; top: 0; }
+#cueLayer { top: 92px; height: 48px; }
+#wordLayer { top: 140px; height: 90px; }
+
+.cue-block { fill: #2d3a4a; stroke: #4a6a8a; stroke-width: 1; cursor: grab; }
+.cue-block:active { cursor: grabbing; }
+.cue-block.selected { fill: #35506b; stroke: #6fa8d8; }
+.cue-label { fill: #cfe; font-size: 11px; pointer-events: none; }
+.cue-handle { fill: #8ab; opacity: 0.55; cursor: ew-resize; }
+.cue-handle:hover, .cue-handle.dragging { fill: #fff; opacity: 0.9; }
+.cue-handle.exempt { fill: #777; }
+.snap-ghost { stroke: #ff9f43; stroke-width: 1.5; stroke-dasharray: 3,3; pointer-events: none; }
+.snap-ghost-label { fill: #ff9f43; font-size: 10px; pointer-events: none; }
+
+.subline-sep { stroke: #445; stroke-width: 1; stroke-dasharray: 2,3; }
+.word-mark { fill: #7fd; cursor: ew-resize; }
+.word-mark:hover, .word-mark.dragging { fill: #fff; }
+.word-text { fill: #9cf; font-size: 10px; pointer-events: none; }
+.proj-mark { stroke: #667; stroke-width: 1; stroke-dasharray: 2,2; pointer-events: none; }
+.proj-text { fill: #667; font-size: 9px; pointer-events: none; font-style: italic; }
+.cue-toolbar-text { fill: #8ab; font-size: 10px; text-decoration: underline; cursor: pointer; }
+.cue-toolbar-text:hover { fill: #fff; }
+
+#playhead {
+  position: absolute; top: 0; bottom: 0; width: 1px; background: #e33; left: 0;
+  pointer-events: none; z-index: 5;
+}

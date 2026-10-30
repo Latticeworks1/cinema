@@ -53,9 +53,7 @@ uniform float4 uMat5;
 uniform float4 uMat6;
 uniform float4 uMat7;
 
-const float FLAT_SCALE = 2.0;
-const float LW = 1920.0;
-const float LH = 1080.0;
+// Dimensions and frame rate are prepended from track::output.
 const int TAPS = 36;
 const int GLOW_TAPS = 16;
 // Blur radius, in display cells, below which one tap is enough and above which all are used.
@@ -156,7 +154,7 @@ float3x3 rotation() {
 
 half4 main(float2 coord) {
     float2 res = iResolution.xy;
-    float2 frameSeed = float2(uSeed, floor(iTime * 30.0));
+    float2 frameSeed = float2(uSeed, floor(iTime * OUTPUT_FPS));
 
     // Tear: on a lock, a cut and a hit, a few rows slide sideways.
     float2 px = coord;

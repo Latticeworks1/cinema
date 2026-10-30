@@ -253,3 +253,93 @@ impl Default for Lyric {
         }
     }
 }
+
+/// Production-directed motion layered onto the selected camera behavior.
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct Motion {
+    pub intro: IntroMotion,
+    pub phrase_stutter: PhraseStutter,
+    pub ending: EndingMotion,
+    pub shot_transient: ShotTransient,
+    pub event_accents: EventAccents,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct IntroMotion {
+    pub enabled: bool,
+    pub roll: f32,
+    pub tilt_y: f32,
+    pub tilt_x: f32,
+    pub zoom_start: f32,
+    pub zoom_rise: f32,
+    pub riser_bars: f32,
+    pub riser_zoom: f32,
+    pub riser_blur: f32,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct PhraseStutter {
+    pub enabled: bool,
+    pub duration_s: f32,
+    pub hz_x: f32,
+    pub hz_y: f32,
+    pub aim_x: f32,
+    pub aim_y: f32,
+    pub zoom: f32,
+    pub roll: f32,
+    pub tear: f32,
+    pub punch: f32,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct EndingMotion {
+    pub enabled: bool,
+    pub lead_bars: f32,
+    pub zoom_mix: f32,
+    pub aim_mix: f32,
+    pub tilt_decay: f32,
+    pub roll_decay: f32,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct ShotTransient {
+    pub enabled: bool,
+    pub duration_s: f32,
+    pub strength: f32,
+    pub tear_gain: f32,
+    pub punch_gain: f32,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct EventAccents {
+    pub impact_enabled: bool,
+    pub impact_decay_s: f32,
+    pub lock_enabled: bool,
+    pub lock_tear: f32,
+    pub lock_aberration: f32,
+}
+
+impl Motion {
+    pub fn valid(&self) -> bool {
+        let i = self.intro;
+        let s = self.phrase_stutter;
+        let e = self.ending;
+        let k = self.shot_transient;
+        let a = self.event_accents;
+        let nonnegative = [i.roll, i.tilt_y, i.tilt_x, i.zoom_rise, i.riser_zoom,
+            i.riser_blur, s.hz_x, s.hz_y, s.aim_x, s.aim_y, s.zoom, s.roll,
+            s.tear, s.punch, e.lead_bars, k.strength, k.tear_gain, k.punch_gain,
+            a.lock_tear, a.lock_aberration];
+        nonnegative.iter().all(|v| v.is_finite() && *v >= 0.0)
+            && [i.zoom_start, i.riser_bars, s.duration_s, k.duration_s, a.impact_decay_s]
+                .iter().all(|v| v.is_finite() && *v > 0.0)
+            && [e.zoom_mix, e.aim_mix, e.tilt_decay, e.roll_decay]
+                .iter().all(|v| (0.0..=1.0).contains(v))
+    }
+}

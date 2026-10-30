@@ -32,8 +32,8 @@ fn main() -> ExitCode {
             default_font: &font,
             // Near lossless: the lens pass films this file and magnifies it.
             video_encoder_options: EncoderOptions {
-                preferred_encoder: Some("libx264"),
-                codec_params: Some(&[("crf", "8"), ("preset", "fast"), ("tune", "animation")]),
+                preferred_encoder: Some(track::output::FLAT_CODEC),
+                codec_params: Some(track::output::FLAT_PARAMS),
                 ..Default::default()
             },
             ..Default::default()

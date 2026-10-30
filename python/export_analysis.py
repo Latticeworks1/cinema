@@ -23,7 +23,7 @@ from pathlib import Path
 
 import numpy as np
 
-FPS = 30  # fixed by the renderer (fframes FPS is a compile-time constant)
+from output_contract import FPS, frame_count, sample_bounds
 SCHEMA_VERSION = 2
 DEFAULT_CONFIG = Path(__file__).resolve().parent.parent / "vocab" / "export.json"
 PC_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
@@ -278,7 +278,7 @@ def analyze(audio_path: Path | None, notes_path: Path, out_path: Path, cfg: dict
             audio_samples = np.frombuffer(raw_bytes, dtype=np.float32).reshape(-1, n_channels)
 
         mono = audio_samples.mean(axis=1)
-        total_frames = int(round(audio_duration_s * FPS))
+        total_frames = frame_count(audio_duration_s)
     else:
         sr, n_channels, mono, audio_duration_s, total_frames = 0, 0, None, None, 0
 
@@ -288,7 +288,7 @@ def analyze(audio_path: Path | None, notes_path: Path, out_path: Path, cfg: dict
         if "seconds" not in notes_raw:
             fail('a transcription without audio needs a top-level "seconds" duration')
         audio_duration_s = float(notes_raw["seconds"])
-        total_frames = int(round(audio_duration_s * FPS))
+        total_frames = frame_count(audio_duration_s)
     notes_duration_s = float(notes_raw.get("seconds", audio_duration_s))
 
     # Validation: Mismatch check
@@ -313,10 +313,10 @@ def analyze(audio_path: Path | None, notes_path: Path, out_path: Path, cfg: dict
         max_peak = max(wave_peaks) if wave_peaks else 1.0
         waveform_norm = [round(p / max_peak, 3) for p in wave_peaks]
 
-        hop_rms = max(1, sr // FPS)
         rms_curve_db = []
         for i in range(total_frames):
-            chunk = mono[i * hop_rms : (i + 1) * hop_rms]
+            start, end = sample_bounds(i, sr)
+            chunk = mono[start:end]
             rms_val = np.sqrt(np.mean(chunk**2)) if len(chunk) > 0 else floor
             db = 20.0 * np.log10(max(float(rms_val), floor))
             rms_curve_db.append(round(float(db), 1))

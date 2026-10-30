@@ -14,8 +14,8 @@ mod draw;
 use direct::Plan;
 use fframes::{AudioMap, Color, Duration, FFramesContext, Frame, Svgr, Video};
 
-pub const WIDTH: usize = 3840;
-pub const HEIGHT: usize = 2160;
+pub const WIDTH: usize = track::output::FLAT_WIDTH;
+pub const HEIGHT: usize = track::output::FLAT_HEIGHT;
 
 pub struct FlatVideo {
     plan: Plan,

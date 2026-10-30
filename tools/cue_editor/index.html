@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>cue editor</title>
+<link rel="stylesheet" href="editor.css">
+</head>
+<body>
+  <div id="topbar">
+    <button id="playBtn" title="space">&#9654;</button>
+    <span id="timeReadout">0.00 / 0.00</span>
+    <span class="sep"></span>
+    <label>zoom <input id="zoom" type="range" min="20" max="300" value="80"></label>
+    <span class="sep"></span>
+    <label title="dragging a cue block moves its word_times with it; drag its edge handle to resize the cut alone">
+      <input id="linkWordTimes" type="checkbox" checked> move word times with cue
+    </label>
+    <span class="sep"></span>
+    <span id="hashWarning" class="warn" hidden>
+      analysis.json's recorded audio hash does not match the source wav on disk -- the waveform
+      shown may be stale. Re-run tools/render.sh before trusting it.
+    </span>
+    <span class="sep"></span>
+    <button id="saveBtn">save</button>
+    <span id="status"></span>
+  </div>
+
+  <div id="scroller">
+    <div id="track">
+      <canvas id="ruler"></canvas>
+      <canvas id="waveform"></canvas>
+      <svg id="cueLayer" xmlns="http://www.w3.org/2000/svg"></svg>
+      <svg id="wordLayer" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div id="playhead"></div>
+    </div>
+  </div>
+
+  <audio id="audio" preload="auto"></audio>
+
+  <script src="editor.js"></script>
+</body>
+</html>

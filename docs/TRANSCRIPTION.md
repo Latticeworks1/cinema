@@ -16,6 +16,9 @@ To render a project, the pipeline requires:
 * **Whisper / Specialized Transcribers**: Modern neural audio models (and whisper-based audio/speech/alignment variants) provide robust feature extraction.
 * **Separation of Concerns**: Because NeuralNote operates as an interactive standalone app and audio plugin (AU/VST3), MIDI files exported from NeuralNote or a DAW can be converted to the `notes.json` schema to drive `cinema`.
 
+For local MuScriptor transcription, spectral review, tempo alignment, and MIDI
+export, see the [MIDI transcription review tool](MIDI_TOOLKIT.md).
+
 ---
 
 ## The `notes.json` Schema

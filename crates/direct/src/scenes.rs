@@ -7,7 +7,7 @@
 //! unusual amount of playing compared with its own average. The vocabulary entry for every
 //! other choice is the one nearest to the scene's measured feel.
 
-use crate::settings::{Attention, CameraLimits, Chrome, Ink, Lyric, Marks, Meter, Priority, Shots, Stage, Tracker};
+use crate::settings::{Motion, Attention, CameraLimits, Chrome, Ink, Lyric, Marks, Meter, Priority, Shots, Stage, Tracker};
 use crate::vocab::{At, Vocabulary, nearest};
 use serde::{Deserialize, Serialize};
 use signals::{Axes, FeelModel, Selection};
@@ -40,6 +40,7 @@ pub struct Direction {
     pub priority: Priority,
     pub stage: Stage,
     pub camera: CameraLimits,
+    pub motion: Motion,
     pub marks: Marks,
     pub tracker: Tracker,
     pub shots: Shots,
@@ -88,7 +89,8 @@ pub fn cue_words(text: &str) -> impl Iterator<Item = &str> {
 impl Direction {
     pub fn parse(json: &str) -> Result<Direction, String> {
         let d: Direction = serde_json::from_str(json).map_err(|e| format!("direction: {e}"))?;
-        let ok = d.phrase_bars > 0
+        let ok = d.motion.valid()
+            && d.phrase_bars > 0
             && d.min_scene_bars > 0.0
             && d.snap_window_beats >= 0.0
             && d.whip_s > 0.0

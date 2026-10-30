@@ -12,8 +12,8 @@ use fframes::{
     Frame, Shader, ShaderUniforms, Svgr, SyncVideoFrameInput, Video,
 };
 
-pub const WIDTH: usize = 1920;
-pub const HEIGHT: usize = 1080;
+pub const WIDTH: usize = track::output::OUTPUT_WIDTH;
+pub const HEIGHT: usize = track::output::OUTPUT_HEIGHT;
 pub const MAX_REGIONS: usize = 8;
 
 pub struct LensVideo {
@@ -23,7 +23,7 @@ pub struct LensVideo {
 
 impl LensVideo {
     pub fn new(plan: Plan) -> Self {
-        Self { plan, shader: Shader::sksl(include_str!("../shaders/lens.sksl")) }
+        Self { plan, shader: Shader::sksl(format!("{}\n{}", track::output::shader_constants(), include_str!("../shaders/lens.sksl"))) }
     }
 
     /// Shader uniforms of a frame; the flat image is bound by the caller.

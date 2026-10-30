@@ -7,7 +7,7 @@
 use crate::camera::Camera;
 use crate::geometry::{W, ease_out, rnd};
 use crate::scenes::{Direction, Scene};
-use track::{FPS, Track};
+use track::Track;
 
 #[derive(Clone, Debug)]
 pub struct LyricLine {
@@ -160,7 +160,7 @@ pub fn state(lines: &[LyricLine], d: &Direction, index: usize) -> Option<LyricSt
     if ly.size <= 0.0 {
         return None;
     }
-    let t = index as f32 / FPS as f32;
+    let t = track::output::seconds(index);
     let i = line_at(lines, t)?;
     let l = &lines[i];
     let len = l.text.chars().count();
@@ -170,7 +170,7 @@ pub fn state(lines: &[LyricLine], d: &Direction, index: usize) -> Option<LyricSt
         Some(wt) => typed_from_onsets(&l.text, wt, t),
         None => ((ly.pre + (1.0 - ly.pre) * (age / done).clamp(0.0, 1.0)) * len as f32).ceil().min(len as f32) as usize,
     };
-    let lock_at = ((l.t0 + done + ly.lock_delay_s) * FPS as f32).round() as usize;
+    let lock_at = track::output::nearest_frame(l.t0 + done + ly.lock_delay_s);
     let locked = index >= lock_at && index < lock_at + d.lock_frames;
     let grow = ((age - done) / (ly.lock_delay_s + 0.2)).clamp(0.0, 1.0);
     let x0 = W * 0.5 - len as f32 * ly.size * ly.advance * 0.5;

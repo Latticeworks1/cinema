@@ -30,8 +30,8 @@ fn main() -> ExitCode {
             media: Some(&media),
             default_font: &font,
             video_encoder_options: EncoderOptions {
-                preferred_encoder: Some("libx264"),
-                codec_params: Some(&[("crf", "16"), ("preset", "slow"), ("tune", "grain")]),
+                preferred_encoder: Some(track::output::LENS_CODEC),
+                codec_params: Some(track::output::LENS_PARAMS),
                 ..Default::default()
             },
             ..Default::default()

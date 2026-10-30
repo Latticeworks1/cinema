@@ -222,7 +222,7 @@ impl Plan {
         let Some(s) = self.track.stem(&self.scenes[scene].dominant) else { return false };
         let probe = (f as f32 + 0.5) / FPS as f32;
         s.last_onset_at(probe).is_some_and(|i| {
-            let fo = (s.notes[i].onset * FPS as f32).round() as usize;
+            let fo = track::output::nearest_frame(s.notes[i].onset);
             f >= fo && f < fo + self.dir.lock_frames
         })
     }
@@ -275,7 +275,7 @@ impl Plan {
     }
 
     pub fn frame(&self, index: usize) -> FrameState {
-        let t = index as f32 / FPS as f32;
+        let t = track::output::seconds(index);
         let si = self.scene_at(t);
         let scene = &self.scenes[si];
         let look = &self.vocab.looks[scene.look];
@@ -312,51 +312,55 @@ impl Plan {
             cam.roll += behave_cam.roll;
         }
 
+        let motion = &self.dir.motion;
+        let intro = motion.intro;
         // Pre-drop cinematic arc
-        if t < self.track.drop_t {
+        if intro.enabled && t < self.track.drop_t {
             let drop_t = self.track.drop_t.max(0.1);
             let u_pre = (t / drop_t).clamp(0.0, 1.0);
             let arc_phi = u_pre * std::f32::consts::PI;
-            cam.roll += 0.02 * arc_phi.sin();
-            cam.tilt_y += 0.035 * (1.0 - u_pre);
-            cam.tilt_x += 0.015 * (arc_phi * 2.0).sin();
-            cam.zoom *= 0.88 + 0.12 * ease_in_out(u_pre);
-            let bar_s = self.track.bar_s;
+            cam.roll += intro.roll * arc_phi.sin();
+            cam.tilt_y += intro.tilt_y * (1.0 - u_pre);
+            cam.tilt_x += intro.tilt_x * (arc_phi * 2.0).sin();
+            cam.zoom *= intro.zoom_start + intro.zoom_rise * ease_in_out(u_pre);
+            let bar_s = self.track.bar_s * intro.riser_bars;
             if t > drop_t - bar_s {
                 let riser = ((t - (drop_t - bar_s)) / bar_s).clamp(0.0, 1.0);
-                cam.zoom *= 1.0 + 0.08 * riser * riser;
-                cam.blur = cam.blur.max(0.3 * riser);
+                cam.zoom *= 1.0 + intro.riser_zoom * riser * riser;
+                cam.blur = cam.blur.max(intro.riser_blur * riser);
             }
         }
 
         // Phrase-start stutter: rapid rhythmic camera micro-oscillation on the 1 of every phrase
         let time_in_phrase = phrase_phase * phrase;
-        let stutter_s = 0.14;
+        let stutter = motion.phrase_stutter;
+        let stutter_s = stutter.duration_s;
         let mut stutter_tear = 0.0;
         let mut stutter_punch = 0.0;
-        if t >= self.track.drop_t && time_in_phrase < stutter_s {
+        if stutter.enabled && t >= self.track.drop_t && time_in_phrase < stutter_s {
             let stutter_u = 1.0 - (time_in_phrase / stutter_s);
-            let stutter_osc = (time_in_phrase * 48.0 * std::f32::consts::TAU).sin();
-            cam.aim.0 += stutter_osc * 10.0 * stutter_u;
-            cam.aim.1 += (time_in_phrase * 64.0 * std::f32::consts::TAU).cos() * 6.0 * stutter_u;
-            cam.zoom *= 1.0 + stutter_osc * 0.025 * stutter_u;
-            cam.roll += stutter_osc * 0.012 * stutter_u;
-            stutter_tear = stutter_u * 0.25 * if (index % 2) == 0 { 1.0 } else { 0.0 };
-            stutter_punch = stutter_u * 0.15;
+            let stutter_osc = (time_in_phrase * stutter.hz_x * std::f32::consts::TAU).sin();
+            cam.aim.0 += stutter_osc * stutter.aim_x * stutter_u;
+            cam.aim.1 += (time_in_phrase * stutter.hz_y * std::f32::consts::TAU).cos() * stutter.aim_y * stutter_u;
+            cam.zoom *= 1.0 + stutter_osc * stutter.zoom * stutter_u;
+            cam.roll += stutter_osc * stutter.roll * stutter_u;
+            stutter_tear = stutter_u * stutter.tear * if (index % 2) == 0 { 1.0 } else { 0.0 };
+            stutter_punch = stutter_u * stutter.punch;
         }
 
         // Zoom-out ending: pull back smoothly to frame the entire stage after impact
-        let ending_t0 = self.track.impact_t.min(self.track.duration_s - 2.5 * self.track.bar_s).max(0.0);
-        if t > ending_t0 {
+        let ending = motion.ending;
+        let ending_t0 = self.track.impact_t.min(self.track.duration_s - ending.lead_bars * self.track.bar_s).max(0.0);
+        if ending.enabled && t > ending_t0 {
             let u_ending = ease_in_out(((t - ending_t0) / (self.track.duration_s - ending_t0)).clamp(0.0, 1.0));
             let stage_center = self.dir.stage.rect().center();
             let wide_zoom = fit_zoom(self.dir.stage.rect(), self.dir.fit);
-            cam.zoom = lerp(cam.zoom, wide_zoom, u_ending * 0.75);
-            cam.aim.0 = lerp(cam.aim.0, stage_center.0, u_ending * 0.75);
-            cam.aim.1 = lerp(cam.aim.1, stage_center.1, u_ending * 0.75);
-            cam.tilt_x *= 1.0 - u_ending * 0.6;
-            cam.tilt_y *= 1.0 - u_ending * 0.6;
-            cam.roll *= 1.0 - u_ending * 0.7;
+            cam.zoom = lerp(cam.zoom, wide_zoom, u_ending * ending.zoom_mix);
+            cam.aim.0 = lerp(cam.aim.0, stage_center.0, u_ending * ending.aim_mix);
+            cam.aim.1 = lerp(cam.aim.1, stage_center.1, u_ending * ending.aim_mix);
+            cam.tilt_x *= 1.0 - u_ending * ending.tilt_decay;
+            cam.tilt_y *= 1.0 - u_ending * ending.tilt_decay;
+            cam.roll *= 1.0 - u_ending * ending.roll_decay;
         }
 
         let whip = cam.blur;
@@ -373,22 +377,24 @@ impl Plan {
         keep_in_view(&mut cam, focus, &self.dir.camera);
         keep_in_stage(&mut cam, &self.dir.camera);
 
-        let since_start = index as isize - (scene.t0 * FPS as f32).round() as isize;
+        let since_start = index as isize - track::output::nearest_frame(scene.t0) as isize;
         let flash = if (0..3).contains(&since_start) { self.dir.cut_flash[since_start as usize] } else { 0.0 };
-        let impact = (-(t - self.track.impact_t).max(0.0) / 0.18).exp() * f32::from(t >= self.track.impact_t);
+        let accents = motion.event_accents;
+        let impact = (-(t - self.track.impact_t).max(0.0) / accents.impact_decay_s).exp() * f32::from(accents.impact_enabled && t >= self.track.impact_t);
         let fade = self.dir.outro_fade_s;
 
         // Shot transient kicks (rapid micro-cut kicks from ff-tracking)
-        let shot_kick = if t >= self.track.drop_t && self.dir.shots.mix > 0.0 {
+        let transient = motion.shot_transient;
+        let shot_kick = if transient.enabled && t >= self.track.drop_t && self.dir.shots.mix > 0.0 {
             let len = self.dir.shots.beats * 60.0 / self.track.bpm;
             let a = (t - self.track.drop_t).rem_euclid(len);
-            if a < 0.07 { (1.0 - a / 0.07) * 0.4 } else { 0.0 }
+            if a < transient.duration_s { (1.0 - a / transient.duration_s) * transient.strength } else { 0.0 }
         } else {
             0.0
         };
         let is_locked = lyric.as_ref().map_or_else(|| self.locked(si, index), |ls| ls.locked);
-        let lock_tear = if is_locked { 0.45 } else { 0.0 };
-        let lock_aberr = if is_locked { 0.35 } else { 0.0 };
+        let lock_tear = if accents.lock_enabled && is_locked { accents.lock_tear } else { 0.0 };
+        let lock_aberr = if accents.lock_enabled && is_locked { accents.lock_aberration } else { 0.0 };
 
         let stops = {
             let cur = self.vocab.palettes[scene.palette].stops;
@@ -424,8 +430,8 @@ impl Plan {
                 grain: value(Param::Grain).clamp(0.0, 1.0),
                 vignette: value(Param::Vignette).clamp(0.0, 1.0),
                 blur: (value(Param::Blur) + whip).clamp(0.0, 2.0),
-                tear: (value(Param::Tear) + stutter_tear + shot_kick * 0.7 + lock_tear).clamp(0.0, 1.5),
-                punch: (value(Param::Punch) + stutter_punch + shot_kick * 0.4).clamp(0.0, 1.5),
+                tear: (value(Param::Tear) + stutter_tear + shot_kick * transient.tear_gain + lock_tear).clamp(0.0, 1.5),
+                punch: (value(Param::Punch) + stutter_punch + shot_kick * transient.punch_gain).clamp(0.0, 1.5),
                 cut: flash.max(impact).max(shot_kick),
                 out: ((t - (self.track.duration_s - fade)) / fade).clamp(0.0, 1.0),
                 lock: is_locked,
@@ -473,6 +479,57 @@ mod tests {
     fn plan() -> Plan {
         let root = concat!(env!("CARGO_MANIFEST_DIR"), "/../..");
         Plan::load(format!("{root}/data/analysis.json"), format!("{root}/vocab")).unwrap()
+    }
+
+    #[test]
+    fn disabled_motion_does_not_leak_into_frames() {
+        let mut a = plan();
+        a.dir.motion.intro.enabled = false;
+        a.dir.motion.phrase_stutter.enabled = false;
+        a.dir.motion.ending.enabled = false;
+        a.dir.motion.shot_transient.enabled = false;
+        a.dir.motion.event_accents.impact_enabled = false;
+        a.dir.motion.event_accents.lock_enabled = false;
+        let mut b = plan();
+        b.dir.motion = a.dir.motion;
+        b.dir.motion.intro.zoom_start = 4.0;
+        b.dir.motion.phrase_stutter.aim_x = 900.0;
+        b.dir.motion.ending.aim_mix = 0.0;
+        b.dir.motion.shot_transient.strength = 9.0;
+        b.dir.motion.event_accents.impact_decay_s = 9.0;
+        b.dir.motion.event_accents.lock_tear = 9.0;
+        for f in 0..a.frames() {
+            let x = a.frame(f);
+            let y = b.frame(f);
+            assert_eq!(x.camera, y.camera, "frame {f}");
+            assert_eq!(x.look, y.look, "frame {f}");
+        }
+    }
+
+    #[test]
+    fn motion_configuration_rejects_invalid_values_and_typos() {
+        let base: serde_json::Value = serde_json::from_str(include_str!("../../../vocab/direction.json")).unwrap();
+        for (group, key, value) in [
+            ("phrase_stutter", "duration_s", serde_json::json!(0)),
+            ("ending", "aim_mix", serde_json::json!(1.1)),
+            ("intro", "enabeld", serde_json::json!(false)),
+        ] {
+            let mut v = base.clone();
+            v["motion"][group][key] = value;
+            assert!(crate::scenes::Direction::parse(&v.to_string()).is_err());
+        }
+    }
+
+    #[test]
+    fn direction_defaults_preserve_frame_states() {
+        use std::hash::{Hash, Hasher};
+        let p = plan();
+        let mut hash = std::collections::hash_map::DefaultHasher::new();
+        for f in 0..p.frames() {
+            let s = p.frame(f);
+            format!("{:?}{:?}", s.camera, s.look).hash(&mut hash);
+        }
+        assert_eq!(hash.finish(), 16735921254544999239, "default camera/look state changed");
     }
 
     #[test]

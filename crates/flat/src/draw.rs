@@ -3,7 +3,7 @@ use direct::{EmitKind, FrameState, Panel, Plan, Slider, register};
 use std::fmt::Write;
 use track::{FPS, Stem, note_name};
 
-const SCALE: f32 = 2.0;
+const SCALE: f32 = track::output::FLAT_SCALE as f32;
 const EMIT_STREAM: u64 = 20;
 
 pub(crate) fn gray(v: f32) -> String {

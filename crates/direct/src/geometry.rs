@@ -4,8 +4,8 @@
 
 use serde::Serialize;
 
-pub const W: f32 = 1920.0;
-pub const H: f32 = 1080.0;
+pub const W: f32 = track::output::LOGICAL_WIDTH as f32;
+pub const H: f32 = track::output::LOGICAL_HEIGHT as f32;
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize)]
 pub struct Rect {

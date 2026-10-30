@@ -9,3 +9,4 @@ data/*.wav
 data/*.mp3
 __pycache__/
 .DS_Store
+tools/transcribe_vocal

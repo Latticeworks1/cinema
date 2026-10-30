@@ -1,4 +1,51 @@
 {
+  "motion": {
+    "intro": {
+      "enabled": true,
+      "roll": 0.02,
+      "tilt_y": 0.035,
+      "tilt_x": 0.015,
+      "zoom_start": 0.88,
+      "zoom_rise": 0.12,
+      "riser_bars": 1.0,
+      "riser_zoom": 0.08,
+      "riser_blur": 0.3
+    },
+    "phrase_stutter": {
+      "enabled": true,
+      "duration_s": 0.14,
+      "hz_x": 48.0,
+      "hz_y": 64.0,
+      "aim_x": 10.0,
+      "aim_y": 6.0,
+      "zoom": 0.025,
+      "roll": 0.012,
+      "tear": 0.25,
+      "punch": 0.15
+    },
+    "ending": {
+      "enabled": true,
+      "lead_bars": 2.5,
+      "zoom_mix": 0.75,
+      "aim_mix": 0.75,
+      "tilt_decay": 0.6,
+      "roll_decay": 0.7
+    },
+    "shot_transient": {
+      "enabled": true,
+      "duration_s": 0.07,
+      "strength": 0.4,
+      "tear_gain": 0.7,
+      "punch_gain": 0.4
+    },
+    "event_accents": {
+      "impact_enabled": true,
+      "impact_decay_s": 0.18,
+      "lock_enabled": true,
+      "lock_tear": 0.45,
+      "lock_aberration": 0.35
+    }
+  },
   "phrase_bars": 2,
   "min_scene_bars": 1.5,
   "entrance_gap_bars": 1.0,

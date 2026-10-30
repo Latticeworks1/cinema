@@ -9,7 +9,8 @@ use serde::Deserialize;
 use std::{collections::BTreeMap, fmt, fs, path::Path};
 
 pub const SCHEMA_VERSION: u32 = 2;
-pub const FPS: usize = 30;
+pub mod output;
+pub use output::FPS;
 
 #[derive(Debug)]
 pub enum TrackError {
@@ -204,7 +205,7 @@ impl Track {
         if !(duration_s.is_finite() && duration_s > 0.0) {
             return invalid("audio_duration_s must be positive");
         }
-        let frames = (duration_s * FPS as f32).round() as usize;
+        let frames = output::frame_count(duration_s);
         if raw.source.total_frames_at_30fps != frames || raw.rms_curve_db.len() != frames {
             return invalid(format!(
                 "{} loudness values and {} declared frames for {frames} expected",

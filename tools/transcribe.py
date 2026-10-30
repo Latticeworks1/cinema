@@ -103,7 +103,7 @@ def export_stem_midis(notes_json_path: Path, output_dir: Path, stem_prefix: str 
     print(f"[*] Exported {len(summary)} stem MIDI tracks to {output_dir}")
 
 
-def transcribe(audio_path: Path, notes_path: Path):
+def transcribe(audio_path: Path, notes_path: Path, export_midi: bool = True):
     """Convert audio to 16kHz PCM and run the NeuralNote MuScriptor engine."""
     repo_root = Path(__file__).resolve().parent.parent
     nn_dir = repo_root / "tools" / "neuralnote"
@@ -124,8 +124,9 @@ def transcribe(audio_path: Path, notes_path: Path):
 
     if notes_path.exists() and notes_path.stat().st_size > 0:
         print(f"[*] Transcription already exists at {notes_path.name}; reusing.")
-        stem_prefix = audio_path.stem
-        export_stem_midis(notes_path, notes_path.parent, stem_prefix=stem_prefix)
+        if export_midi:
+            stem_prefix = audio_path.stem
+            export_stem_midis(notes_path, notes_path.parent, stem_prefix=stem_prefix)
         return
 
     with tempfile.NamedTemporaryFile(suffix=".f32", delete=True) as pcm_file:
@@ -163,8 +164,9 @@ def transcribe(audio_path: Path, notes_path: Path):
         raise RuntimeError(f"NeuralNote transcription produced no output at {notes_path}")
 
     # Generate companion stem MIDIs
-    stem_prefix = audio_path.stem
-    export_stem_midis(notes_path, notes_path.parent, stem_prefix=stem_prefix)
+    if export_midi:
+        stem_prefix = audio_path.stem
+        export_stem_midis(notes_path, notes_path.parent, stem_prefix=stem_prefix)
     print(f"[Success] Notes saved to {notes_path}")
 
 
