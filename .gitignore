@@ -17,3 +17,4 @@ media/*.jpg
 media/*.jpeg
 examples/*/audio
 examples/*/audio/
+projects/

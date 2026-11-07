@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+cd "$(dirname "$0")/.." && PYTHONPATH=python exec python3 -m cinema "$@"

@@ -57,6 +57,10 @@ The flat and lens crates are built in separate cargo invocations, as the script 
 
 Build products are shared with a sibling `../ff-unmute` checkout through `.cargo/config.toml`; delete that file to use a local `target/` directory instead.
 
+## Interface
+
+The pipeline can be driven from Python, from `bin/cinema` or over local HTTP; see [docs/API.md](docs/API.md).
+
 ## Project folders and the example
 
 A packet belongs to a project folder, which is the parent of the folder holding the packet. For the packets in `packets/` that is the repository root. A project folder holds the material that belongs to one piece and not to the program: `data/NAME_media.json`, `data/NAME_collage.json`, `data/NAME_plates.json`, `data/NAME_lyrics.txt` and its other sidecar files, a `media/` folder of pictures, and the anchor records under `data/anchors/`. The tools that read these (`tools/make_collage.py`, `tools/produce.py`, `tools/stage_media.py`) find them from the packet's location, so a second piece is a second project folder and never changes the program.
