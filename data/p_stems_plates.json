@@ -1,0 +1,335 @@
+[
+  {
+    "image": "spring_plum.png",
+    "t0": 0.9,
+    "t1": 9.8,
+    "x": 0.01,
+    "y": 0.04,
+    "w": 0.22,
+    "h": 0.92,
+    "space": "view",
+    "fit": "meet",
+    "opacity": 0.9,
+    "fade_s": 0.8,
+    "lyric_dim": 0.0,
+    "drift": [
+      0,
+      -0.004
+    ],
+    "pulse": 0.02
+  },
+  {
+    "image": "spring_crape.png",
+    "t0": 4.7,
+    "t1": 15.0,
+    "x": 0.76,
+    "y": 0.06,
+    "w": 0.23,
+    "h": 0.88,
+    "space": "view",
+    "fit": "meet",
+    "opacity": 0.9,
+    "fade_s": 0.8,
+    "lyric_dim": 0.0,
+    "drift": [
+      -0.002,
+      0
+    ],
+    "pulse": 0.03
+  },
+  {
+    "image": "spring_apple.png",
+    "t0": 12.2,
+    "t1": 15.0,
+    "x": 0.36,
+    "y": 0.0,
+    "w": 0.28,
+    "h": 0.4,
+    "space": "view",
+    "fit": "meet",
+    "opacity": 0.95,
+    "fade_s": 0.8,
+    "lyric_dim": 0.0,
+    "pulse": 0.05
+  },
+  {
+    "image": "spring_windtree.png",
+    "t0": 16.4,
+    "t1": 20.2,
+    "x": 0,
+    "y": 0,
+    "w": 1,
+    "h": 1,
+    "space": "view",
+    "fit": "slice",
+    "opacity": 0.55,
+    "fade_s": 0.8,
+    "lyric_dim": 0.5,
+    "drift": [
+      0.004,
+      0
+    ],
+    "pulse": 0.02,
+    "tone": {
+      "gain": 0.85
+    }
+  },
+  {
+    "image": "spring_cyanotype.png",
+    "t0": 20.0,
+    "t1": 28.2,
+    "x": 0.0,
+    "y": 0.0,
+    "w": 1,
+    "h": 1,
+    "space": "view",
+    "fit": "slice",
+    "opacity": 0.8,
+    "fade_s": 0.8,
+    "lyric_dim": 0.5,
+    "drift": [
+      0.003,
+      0
+    ],
+    "pulse": 0.03,
+    "tone": {
+      "gain": 0.9
+    }
+  },
+  {
+    "image": "spring_crack.png",
+    "t0": 28.0,
+    "t1": 31.6,
+    "x": 0.0,
+    "y": 0.0,
+    "w": 1,
+    "h": 1,
+    "space": "view",
+    "fit": "slice",
+    "opacity": 0.8,
+    "fade_s": 0.8,
+    "lyric_dim": 0.5,
+    "pulse": 0.04
+  },
+  {
+    "image": "spring_kids.png",
+    "t0": 31.4,
+    "t1": 36.4,
+    "x": 0.0,
+    "y": 0.0,
+    "w": 1,
+    "h": 1,
+    "space": "view",
+    "fit": "slice",
+    "opacity": 0.55,
+    "fade_s": 1.2,
+    "lyric_dim": 0.6,
+    "drift": [
+      -0.003,
+      0
+    ]
+  },
+  {
+    "image": "spring_picnic.png",
+    "t0": 36.0,
+    "t1": 39.7,
+    "x": 0.22,
+    "y": 0.52,
+    "w": 0.56,
+    "h": 0.4,
+    "space": "view",
+    "fit": "meet",
+    "opacity": 0.95,
+    "fade_s": 0.8,
+    "lyric_dim": 0.0
+  },
+  {
+    "image": "spring_cyanotype.png",
+    "t0": 39.5,
+    "t1": 47.6,
+    "x": 0.0,
+    "y": 0.0,
+    "w": 1,
+    "h": 1,
+    "space": "view",
+    "fit": "slice",
+    "opacity": 0.7,
+    "fade_s": 1.0,
+    "lyric_dim": 0.6,
+    "drift": [
+      -0.003,
+      0
+    ],
+    "tone": {
+      "gain": 0.85,
+      "invert": true
+    }
+  },
+  {
+    "image": "spring_ruin.png",
+    "t0": 47.4,
+    "t1": 55.6,
+    "x": 0,
+    "y": 0,
+    "w": 1,
+    "h": 1,
+    "space": "view",
+    "fit": "slice",
+    "opacity": 0.75,
+    "fade_s": 1.0,
+    "lyric_dim": 0.4,
+    "drift": [
+      0.003,
+      0
+    ]
+  },
+  {
+    "image": "spring_apple.png",
+    "t0": 55.4,
+    "t1": 60.4,
+    "x": 0.01,
+    "y": 0.04,
+    "w": 0.26,
+    "h": 0.92,
+    "space": "view",
+    "fit": "meet",
+    "opacity": 0.9,
+    "fade_s": 0.8,
+    "lyric_dim": 0.0,
+    "pulse": 0.04
+  },
+  {
+    "image": "spring_crape.png",
+    "t0": 55.6,
+    "t1": 60.4,
+    "x": 0.73,
+    "y": 0.04,
+    "w": 0.26,
+    "h": 0.92,
+    "space": "view",
+    "fit": "meet",
+    "opacity": 0.9,
+    "fade_s": 0.8,
+    "lyric_dim": 0.0,
+    "pulse": 0.04
+  },
+  {
+    "image": "spring_picnic.png",
+    "t0": 60.0,
+    "t1": 64.2,
+    "x": 0.22,
+    "y": 0.3,
+    "w": 0.56,
+    "h": 0.4,
+    "space": "view",
+    "fit": "meet",
+    "opacity": 0.95,
+    "fade_s": 0.8,
+    "lyric_dim": 0.0
+  },
+  {
+    "image": "spring_windtree.png",
+    "t0": 105.2,
+    "t1": 110.0,
+    "x": 0,
+    "y": 0,
+    "w": 1,
+    "h": 1,
+    "space": "view",
+    "fit": "slice",
+    "opacity": 0.6,
+    "fade_s": 1.2,
+    "lyric_dim": 0.0,
+    "drift": [
+      0.003,
+      0
+    ]
+  },
+  {
+    "image": "spring_plum.png",
+    "t0": 109.6,
+    "t1": 114.4,
+    "x": 0.3,
+    "y": 0.04,
+    "w": 0.4,
+    "h": 0.92,
+    "space": "view",
+    "fit": "meet",
+    "opacity": 0.9,
+    "fade_s": 1.2,
+    "lyric_dim": 0.0,
+    "drift": [
+      0,
+      -0.004
+    ]
+  },
+  {
+    "image": "spring_kids.png",
+    "t0": 114.0,
+    "t1": 118.8,
+    "x": 0,
+    "y": 0,
+    "w": 1,
+    "h": 1,
+    "space": "view",
+    "fit": "slice",
+    "opacity": 0.6,
+    "fade_s": 1.2,
+    "lyric_dim": 0.0,
+    "drift": [
+      -0.003,
+      0
+    ]
+  },
+  {
+    "image": "spring_cyanotype.png",
+    "t0": 118.4,
+    "t1": 123.2,
+    "x": 0,
+    "y": 0,
+    "w": 1,
+    "h": 1,
+    "space": "view",
+    "fit": "slice",
+    "opacity": 0.75,
+    "fade_s": 1.2,
+    "lyric_dim": 0.0,
+    "drift": [
+      0.003,
+      0
+    ]
+  },
+  {
+    "image": "spring_ruin.png",
+    "t0": 122.8,
+    "t1": 127.8,
+    "x": 0,
+    "y": 0,
+    "w": 1,
+    "h": 1,
+    "space": "view",
+    "fit": "slice",
+    "opacity": 0.7,
+    "fade_s": 1.2,
+    "lyric_dim": 0.0,
+    "drift": [
+      -0.003,
+      0
+    ]
+  },
+  {
+    "image": "spring_crack.png",
+    "t0": 127.4,
+    "t1": 132.8,
+    "x": 0.28,
+    "y": 0.1,
+    "w": 0.44,
+    "h": 0.8,
+    "space": "view",
+    "fit": "meet",
+    "opacity": 0.95,
+    "fade_s": 1.2,
+    "lyric_dim": 0.0,
+    "pulse": 0.02
+  }
+]

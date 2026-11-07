@@ -1,0 +1,104 @@
+{
+ "schema": 1,
+ "image": "cut_spring_kids.png",
+ "sha256": "cbe1e51e5593a4eba9715facddcf9aa222fc0c44816e3dca929c90ef7a4e42f0",
+ "size": [
+  317,
+  296
+ ],
+ "backend": "grounding_dino",
+ "model": "IDEA-Research/grounding-dino-base",
+ "config": "3ba1d78a80a9",
+ "noise_floor": 0.0,
+ "threshold": 0.08,
+ "boxes": [
+  {
+   "label": "face",
+   "score": 0.7207,
+   "box": [
+    0.2335,
+    0.1363,
+    0.3952,
+    0.3517
+   ],
+   "id": "a0"
+  },
+  {
+   "label": "face",
+   "score": 0.6937,
+   "box": [
+    0.43,
+    0.3299,
+    0.5894,
+    0.5187
+   ],
+   "id": "a1"
+  },
+  {
+   "label": "face",
+   "score": 0.669,
+   "box": [
+    0.7544,
+    0.3268,
+    0.9077,
+    0.4675
+   ],
+   "id": "a2"
+  },
+  {
+   "label": "flower",
+   "score": 0.5162,
+   "box": [
+    0.7104,
+    0.547,
+    0.8174,
+    0.661
+   ],
+   "id": "a3"
+  },
+  {
+   "label": "flower",
+   "score": 0.4833,
+   "box": [
+    0.181,
+    0.5802,
+    0.292,
+    0.6901
+   ],
+   "id": "a4"
+  },
+  {
+   "label": "flower",
+   "score": 0.4398,
+   "box": [
+    0.7055,
+    0.6902,
+    0.796,
+    0.7809
+   ],
+   "id": "a5"
+  },
+  {
+   "label": "flower",
+   "score": 0.415,
+   "box": [
+    0.3445,
+    0.698,
+    0.4183,
+    0.7862
+   ],
+   "id": "a6"
+  },
+  {
+   "label": "plant",
+   "score": 0.2036,
+   "box": [
+    0.6006,
+    0.6704,
+    0.9101,
+    0.9807
+   ],
+   "id": "a7"
+  }
+ ]
+}

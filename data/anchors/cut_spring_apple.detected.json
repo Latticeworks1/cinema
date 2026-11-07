@@ -1,0 +1,126 @@
+{
+ "schema": 1,
+ "image": "cut_spring_apple.png",
+ "sha256": "1ead06f1e1ef9882d72ea045687c39de2ef3d89ed3023b5dfc88ff998dfcd660",
+ "size": [
+  645,
+  870
+ ],
+ "backend": "grounding_dino",
+ "model": "IDEA-Research/grounding-dino-base",
+ "config": "3ba1d78a80a9",
+ "noise_floor": 0.0,
+ "threshold": 0.08,
+ "boxes": [
+  {
+   "label": "flower",
+   "score": 0.4576,
+   "box": [
+    0.5472,
+    0.5305,
+    0.8118,
+    0.737
+   ],
+   "id": "a0"
+  },
+  {
+   "label": "flower",
+   "score": 0.4442,
+   "box": [
+    0.4067,
+    0.4324,
+    0.6758,
+    0.6151
+   ],
+   "id": "a1"
+  },
+  {
+   "label": "flower",
+   "score": 0.4297,
+   "box": [
+    0.3793,
+    0.2941,
+    0.6349,
+    0.4585
+   ],
+   "id": "a2"
+  },
+  {
+   "label": "flower",
+   "score": 0.4285,
+   "box": [
+    0.6227,
+    0.3648,
+    0.8173,
+    0.5207
+   ],
+   "id": "a3"
+  },
+  {
+   "label": "leaf",
+   "score": 0.3761,
+   "box": [
+    0.0818,
+    0.4347,
+    0.3221,
+    0.6076
+   ],
+   "id": "a4"
+  },
+  {
+   "label": "flower",
+   "score": 0.3622,
+   "box": [
+    0.5939,
+    0.3209,
+    0.7344,
+    0.4014
+   ],
+   "id": "a5"
+  },
+  {
+   "label": "leaf",
+   "score": 0.3619,
+   "box": [
+    0.3641,
+    0.6501,
+    0.6175,
+    0.8704
+   ],
+   "id": "a6"
+  },
+  {
+   "label": "leaf",
+   "score": 0.3339,
+   "box": [
+    0.3497,
+    0.1005,
+    0.6129,
+    0.3174
+   ],
+   "id": "a7"
+  },
+  {
+   "label": "leaf",
+   "score": 0.3317,
+   "box": [
+    0.7144,
+    0.48,
+    0.9531,
+    0.6561
+   ],
+   "id": "a8"
+  },
+  {
+   "label": "leaf",
+   "score": 0.3283,
+   "box": [
+    0.6443,
+    0.6806,
+    0.8678,
+    0.8587
+   ],
+   "id": "a9"
+  }
+ ]
+}

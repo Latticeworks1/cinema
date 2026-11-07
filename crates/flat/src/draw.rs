@@ -26,11 +26,13 @@ pub fn artwork(plan: &Plan, index: usize, bands: Option<&[f32]>) -> String {
     .unwrap();
     chrome::band(&mut s, plan, &st, bands);
     let dim = if st.lyric.is_some() { plan.dir.lyric.dim } else { 1.0 };
+    plates(&mut s, plan, &st, "under");
     write!(s, "<g opacity='{dim:.2}'>").unwrap();
     for panel in &st.panels {
         draw_panel(&mut s, plan, &st, panel);
     }
     s.push_str("</g>");
+    plates(&mut s, plan, &st, "over");
     if let Some(ly) = &st.lyric {
         lyric(&mut s, plan, ly);
     }
@@ -39,6 +41,38 @@ pub fn artwork(plan: &Plan, index: usize, bands: Option<&[f32]>) -> String {
     }
     s.push_str("</g></svg>");
     s
+}
+
+/// The authored collage plates of one layer, in the order they are listed. Each is placed in
+/// fractions of the stage, or of what the camera sees for a "view" plate, faded over its time window, moved by its drift, swelled by the pulse and
+/// turned about its own centre; its tone is a brightness matrix, because the lens keeps only
+/// brightness and chooses the colour from the scene's palette.
+fn plates(s: &mut String, plan: &Plan, st: &FrameState, layer: &str) {
+    for (i, p) in plan.dir.collage.iter().enumerate().filter(|(_, p)| p.layer == layer) {
+        let Some(at) = p.placed(&plan.dir, st) else { continue };
+        let (w, h, alpha, cx, cy) = (at.w, at.h, at.alpha, at.cx, at.cy);
+        let fit = if p.fit == "meet" { "xMidYMid meet" } else { "xMidYMid slice" };
+        // brightness = 0.30 r + 0.59 g + 0.11 b, then gain and bias, with light and dark swapped on invert
+        let (g, b) = if p.tone.invert { (-p.tone.gain, p.tone.bias + p.tone.gain) } else { (p.tone.gain, p.tone.bias) };
+        let row = format!("{:.4} {:.4} {:.4} 0 {:.4}", 0.30 * g, 0.59 * g, 0.11 * g, b);
+        let turn = format!("rotate({:.2} {cx:.1} {cy:.1})", p.rot);
+        if p.matte > 0.0 {
+            write!(s, "<rect x='{:.1}' y='{:.1}' width='{w:.1}' height='{h:.1}' fill='black' opacity='{:.3}' transform='{turn}'/>", cx - w * 0.5, cy - h * 0.5, p.matte * alpha).unwrap();
+        }
+        write!(
+            s,
+            "<filter id='plate{i}' color-interpolation-filters='sRGB' x='0' y='0' width='1' height='1'><feColorMatrix type='matrix' values='{row} {row} {row} 0 0 0 1 0'/></filter>\
+             <image href='{}' x='{:.1}' y='{:.1}' width='{w:.1}' height='{h:.1}' preserveAspectRatio='{fit}' opacity='{alpha:.3}' filter='url(#plate{i})' transform='rotate({:.2} {cx:.1} {cy:.1})'/>",
+            p.image,
+            cx - w * 0.5,
+            cy - h * 0.5,
+            p.rot
+        )
+        .unwrap();
+        if p.frame > 0.0 {
+            write!(s, "<rect x='{:.1}' y='{:.1}' width='{w:.1}' height='{h:.1}' fill='none' stroke='white' stroke-width='{:.1}' opacity='{:.3}' transform='{turn}'/>", cx - w * 0.5, cy - h * 0.5, p.frame, alpha).unwrap();
+        }
+    }
 }
 
 fn draw_panel(s: &mut String, plan: &Plan, st: &FrameState, panel: &Panel) {
@@ -97,19 +131,41 @@ fn draw_panel(s: &mut String, plan: &Plan, st: &FrameState, panel: &Panel) {
             }
         };
         let thick = plan.dir.marks.note_h * if sounding { pulse } else { 1.0 };
-        let cap = if shape.corner >= 0.6 { "round" } else { "butt" };
-        let len = if cap == "round" { (len - thick).max(0.5) } else { len };
-        write!(
-            s,
-            "<line x1='{:.1}' y1='{:.1}' x2='{:.1}' y2='{:.1}' stroke='{}' stroke-width='{:.1}' stroke-linecap='{cap}'/>",
-            p.0,
-            p.1,
-            p.0 + dx * len,
-            p.1 + dy * len,
-            gray(v),
-            thick
-        )
-        .unwrap();
+        let frag = &plan.dir.fragments;
+        if panel.stem == frag.stem && !frag.sets.is_empty() && slider == Slider::Linear {
+            // An image fragment stands in for the mark: the set follows the scene, the row is the
+            // pitch register and the column the note's place in the stem. The tile is cropped to
+            // the note's length by `slice`.
+            let set = &frag.sets[st.scene % frag.sets.len()];
+            let row = ((register(stem, n.pitch) * set.rows as f32) as usize).min(set.rows - 1);
+            let col = idx % set.cols;
+            let h = frag.height * if sounding { pulse } else { 1.0 };
+            write!(
+                s,
+                "<image href='{}_r{row}_c{col}.png' x='{:.1}' y='{:.1}' width='{:.1}' height='{:.1}' preserveAspectRatio='xMidYMid slice' opacity='{:.2}'/>",
+                set.prefix,
+                p.0,
+                p.1 - 0.5 * h,
+                len,
+                h,
+                v.clamp(0.0, 1.0)
+            )
+            .unwrap();
+        } else {
+            let cap = if shape.corner >= 0.6 { "round" } else { "butt" };
+            let len = if cap == "round" { (len - thick).max(0.5) } else { len };
+            write!(
+                s,
+                "<line x1='{:.1}' y1='{:.1}' x2='{:.1}' y2='{:.1}' stroke='{}' stroke-width='{:.1}' stroke-linecap='{cap}'/>",
+                p.0,
+                p.1,
+                p.0 + dx * len,
+                p.1 + dy * len,
+                gray(v),
+                thick
+            )
+            .unwrap();
+        }
         if !ahead {
             emit(s, plan, st, panel, si, stem, idx, p, v);
         }

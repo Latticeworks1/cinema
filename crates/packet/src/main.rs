@@ -25,13 +25,14 @@ fn prepare(p: &Packet) -> Result<(), String> {
     }
     let python = env::var("CINEMA_PYTHON").unwrap_or_else(|_| "python3".into());
     let script = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../python/export_analysis.py");
-    let mut cmd = Command::new(python);
+    let mut cmd = Command::new(&python);
     fs::write(p.export_config_path(), p.section(Section::Export)?).map_err(io)?;
     cmd.arg(script).arg("--notes").arg(&notes).arg("--out").arg(p.analysis_path()).arg("--config").arg(p.export_config_path());
     if let Some(audio) = &p.audio {
         cmd.arg("--audio").arg(audio);
     }
     run(&mut cmd, "export_analysis.py")?;
+    detect_anchors(p, &python)?;
     match &p.audio {
         Some(audio) => drop(fs::copy(audio, p.music_path()).map_err(io)?),
         None => {
@@ -41,12 +42,38 @@ fn prepare(p: &Packet) -> Result<(), String> {
     Ok(())
 }
 
+/// Find motifs in the images the packet's plates use and write the merged anchors for the planner.
+/// Images whose file and configuration are unchanged are not detected again.
+fn detect_anchors(p: &Packet, python: &str) -> Result<(), String> {
+    let io = |e: std::io::Error| e.to_string();
+    fs::write(p.anchors_config_path(), p.section(Section::Anchors)?).map_err(io)?;
+    fs::write(p.direction_path(), p.section(Section::Direction)?).map_err(io)?;
+    let script = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tools/anchors.py");
+    run(
+        Command::new(python)
+            .arg(script)
+            .arg("prepare")
+            .arg("--config")
+            .arg(p.anchors_config_path())
+            .arg("--direction")
+            .arg(p.direction_path())
+            .arg("--media")
+            .arg(p.media())
+            .arg("--dir")
+            .arg(p.anchors_dir())
+            .arg("--out")
+            .arg(p.anchors_path()),
+        "anchors.py prepare",
+    )
+}
+
 fn show(p: &Packet) -> Result<(), String> {
     println!("packet   {} ({})", p.name, p.path.display());
     println!("mode     {:?}", p.mode());
     println!("audio    {}", p.audio.as_ref().map_or("-".into(), |a| a.display().to_string()));
     println!("notes    {}", p.notes_path().display());
     println!("run dir  {}", p.run_dir().display());
+    println!("anchors  {}", p.anchors_dir().display());
     for s in Section::ALL {
         let text = p.section(s)?;
         println!("{:<10} {} bytes, {} overridden keys", s.name(), text.len(), p.overrides(s));

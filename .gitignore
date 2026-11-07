@@ -10,3 +10,9 @@ data/*.mp3
 __pycache__/
 .DS_Store
 tools/transcribe_vocal
+
+# staged and derived images come from data/*_media.json; the sources are not redistributed
+media/*.png
+media/*.jpg
+media/*.jpeg
+data/springtime/

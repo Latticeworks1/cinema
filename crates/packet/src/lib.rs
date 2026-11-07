@@ -29,16 +29,18 @@ pub enum Section {
     Direction,
     Signals,
     Export,
+    Anchors,
 }
 
 impl Section {
-    pub const ALL: [Section; 6] = [
+    pub const ALL: [Section; 7] = [
         Section::Feel,
         Section::Vocabulary,
         Section::Matrix,
         Section::Direction,
         Section::Signals,
         Section::Export,
+        Section::Anchors,
     ];
 
     pub fn name(self) -> &'static str {
@@ -49,6 +51,7 @@ impl Section {
             Section::Direction => "direction",
             Section::Signals => "signals",
             Section::Export => "export",
+            Section::Anchors => "anchors",
         }
     }
 }
@@ -79,6 +82,9 @@ struct Doc {
     transcriber: Option<Vec<String>>,
     vocab: String,
     media: String,
+    /// Folder of per-image anchor sidecars (detected and hand-edited); absent means `<run>/anchors`.
+    #[serde(default)]
+    anchors: Option<String>,
     out: String,
     #[serde(default)]
     set: BTreeMap<String, Value>,
@@ -95,6 +101,7 @@ pub struct Packet {
     pub transcriber: Option<Vec<String>>,
     vocab: PathBuf,
     media: PathBuf,
+    anchors: Option<PathBuf>,
     out: PathBuf,
     set: BTreeMap<String, Value>,
 }
@@ -149,7 +156,7 @@ fn load_value(path: &Path, stack: &mut Vec<PathBuf>) -> Result<Value, String> {
         return Err(format!("packet {}: not a JSON object", path.display()));
     };
     let dir = path.parent().unwrap_or(Path::new("."));
-    for key in ["vocab", "media", "out"] {
+    for key in ["vocab", "media", "anchors", "out"] {
         if let Some(Value::String(s)) = obj.get_mut(key) {
             *s = resolve(dir, s);
         }
@@ -202,6 +209,7 @@ impl Packet {
             transcriber: doc.transcriber,
             vocab: PathBuf::from(doc.vocab),
             media: PathBuf::from(doc.media),
+            anchors: doc.anchors.map(PathBuf::from),
             out: PathBuf::from(doc.out),
             set: doc.set,
         })
@@ -228,6 +236,26 @@ impl Packet {
     /// Everything this run writes goes under `<out>/<name>/`.
     pub fn run_dir(&self) -> PathBuf {
         self.out.join(&self.name)
+    }
+
+    /// Where the per-image anchor sidecars live.
+    pub fn anchors_dir(&self) -> PathBuf {
+        self.anchors.clone().unwrap_or_else(|| self.run_dir().join("anchors"))
+    }
+
+    /// The anchors configuration with this packet's overrides, written here for the detector.
+    pub fn anchors_config_path(&self) -> PathBuf {
+        self.run_dir().join("anchors_config.json")
+    }
+
+    /// The resolved direction, written here so the detector can read which images the packet uses.
+    pub fn direction_path(&self) -> PathBuf {
+        self.run_dir().join("direction.json")
+    }
+
+    /// Merged anchors for every image the packet's plates use; what the planner reads.
+    pub fn anchors_path(&self) -> PathBuf {
+        self.run_dir().join("anchors.json")
     }
 
     pub fn notes_path(&self) -> PathBuf {

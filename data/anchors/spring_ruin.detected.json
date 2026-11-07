@@ -1,0 +1,126 @@
+{
+ "schema": 1,
+ "image": "spring_ruin.png",
+ "sha256": "0d560bf9b76919c11e476ecf8ac6e8dab6e8fa4dad2eed3bacadff39315494ad",
+ "size": [
+  1536,
+  1024
+ ],
+ "backend": "grounding_dino",
+ "model": "IDEA-Research/grounding-dino-base",
+ "config": "3ba1d78a80a9",
+ "noise_floor": 0.0,
+ "threshold": 0.08,
+ "boxes": [
+  {
+   "label": "flower",
+   "score": 0.529,
+   "box": [
+    0.6718,
+    0.4278,
+    0.8042,
+    0.6103
+   ],
+   "id": "a0"
+  },
+  {
+   "label": "flower",
+   "score": 0.4836,
+   "box": [
+    0.3502,
+    0.0006,
+    0.4748,
+    0.1658
+   ],
+   "id": "a1"
+  },
+  {
+   "label": "flower",
+   "score": 0.4742,
+   "box": [
+    0.8974,
+    0.2451,
+    0.9987,
+    0.3914
+   ],
+   "id": "a2"
+  },
+  {
+   "label": "flower",
+   "score": 0.3648,
+   "box": [
+    0.4117,
+    0.23,
+    0.4877,
+    0.3151
+   ],
+   "id": "a3"
+  },
+  {
+   "label": "flower",
+   "score": 0.3529,
+   "box": [
+    0.3733,
+    0.2957,
+    0.4559,
+    0.4091
+   ],
+   "id": "a4"
+  },
+  {
+   "label": "flower",
+   "score": 0.3474,
+   "box": [
+    0.3643,
+    0.1958,
+    0.4198,
+    0.2741
+   ],
+   "id": "a5"
+  },
+  {
+   "label": "flower",
+   "score": 0.3466,
+   "box": [
+    0.2921,
+    0.3358,
+    0.3783,
+    0.4436
+   ],
+   "id": "a6"
+  },
+  {
+   "label": "flower",
+   "score": 0.3151,
+   "box": [
+    0.3895,
+    0.0737,
+    0.455,
+    0.1655
+   ],
+   "id": "a7"
+  },
+  {
+   "label": "flower",
+   "score": 0.2886,
+   "box": [
+    0.7625,
+    0.4547,
+    0.8067,
+    0.5151
+   ],
+   "id": "a8"
+  },
+  {
+   "label": "flower",
+   "score": 0.2851,
+   "box": [
+    0.2706,
+    0.3932,
+    0.3263,
+    0.4882
+   ],
+   "id": "a9"
+  }
+ ]
+}

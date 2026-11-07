@@ -1,28 +1,133 @@
 {
   "routes": [
-    { "from": "kick.hit",       "to": "punch",      "gain": 1.00 },
-    { "from": "kick.hit",       "to": "zoom",       "gain": 0.04 },
-    { "from": "kick.hit",       "to": "tear",       "gain": 0.30 },
-    { "from": "kick.hit",       "to": "pulse",      "gain": 0.18 },
-    { "from": "snare.hit",      "to": "tear",       "gain": 0.80 },
-    { "from": "snare.hit",      "to": "aberration", "gain": 0.25 },
-    { "from": "hat.hit",        "to": "grain",      "gain": 0.12 },
-    { "from": "hat.hit",        "to": "pulse",      "gain": 0.06 },
-    { "from": "bass.hit",       "to": "blur",       "gain": 0.20, "curve": "square" },
-    { "from": "bass.pitch",     "to": "aim_y",      "gain": 36,   "smooth_s": 0.20 },
-    { "from": "bass.gate",      "to": "led",        "gain": 0.10, "smooth_s": 0.10 },
-    { "from": "piano.pitch",    "to": "aim_y",      "gain": -70,  "smooth_s": 0.10, "lead_s": 0.15 },
-    { "from": "piano.leap",     "to": "roll",       "gain": 0.14 },
-    { "from": "piano.hit",      "to": "bloom",      "gain": 0.25 },
-    { "from": "piano.hit",      "to": "pulse",      "gain": 0.12 },
-    { "from": "piano.density",  "to": "emit",       "gain": 0.80 },
-    { "from": "piano.quiet",    "to": "zoom",       "gain": 0.06, "curve": "smooth" },
-    { "from": "master.level",   "to": "bloom",      "gain": 0.30, "curve": "smooth" },
-    { "from": "master.level",   "to": "aberration", "gain": 0.15 },
-    { "from": "master.bar_phase", "to": "tilt_y",   "gain": 0.04, "curve": "sine" },
-    { "from": "rhythm.0.pulse", "to": "grain",      "gain": 0.04 },
-    { "from": "rhythm.1.pulse", "to": "bloom",      "gain": 0.06 },
-    { "from": "rhythm.3.phase", "to": "aim_x",      "gain": 18,   "curve": "sine" },
-    { "from": "rhythm.5.phase", "to": "roll",       "gain": 0.03, "curve": "sine" }
+    {
+      "from": "kick.hit",
+      "to": "punch",
+      "gain": 1.0
+    },
+    {
+      "from": "kick.hit",
+      "to": "zoom",
+      "gain": 0.04
+    },
+    {
+      "from": "kick.hit",
+      "to": "tear",
+      "gain": 0.3
+    },
+    {
+      "from": "kick.hit",
+      "to": "pulse",
+      "gain": 0.18
+    },
+    {
+      "from": "snare.hit",
+      "to": "tear",
+      "gain": 0.8
+    },
+    {
+      "from": "snare.hit",
+      "to": "aberration",
+      "gain": 0.25
+    },
+    {
+      "from": "hat.hit",
+      "to": "grain",
+      "gain": 0.12
+    },
+    {
+      "from": "hat.hit",
+      "to": "pulse",
+      "gain": 0.06
+    },
+    {
+      "from": "bass.hit",
+      "to": "blur",
+      "gain": 0.2,
+      "curve": "square"
+    },
+    {
+      "from": "bass.pitch",
+      "to": "aim_y",
+      "gain": 36,
+      "smooth_s": 0.2
+    },
+    {
+      "from": "bass.gate",
+      "to": "led",
+      "gain": 0.1,
+      "smooth_s": 0.1
+    },
+    {
+      "from": "piano.pitch",
+      "to": "aim_y",
+      "gain": -70,
+      "smooth_s": 0.1,
+      "lead_s": 0.15
+    },
+    {
+      "from": "piano.leap",
+      "to": "roll",
+      "gain": 0.14
+    },
+    {
+      "from": "piano.hit",
+      "to": "bloom",
+      "gain": 0.25
+    },
+    {
+      "from": "piano.hit",
+      "to": "pulse",
+      "gain": 0.12
+    },
+    {
+      "from": "piano.density",
+      "to": "emit",
+      "gain": 0.8
+    },
+    {
+      "from": "piano.quiet",
+      "to": "zoom",
+      "gain": 0.06,
+      "curve": "smooth"
+    },
+    {
+      "from": "master.level",
+      "to": "bloom",
+      "gain": 0.3,
+      "curve": "smooth"
+    },
+    {
+      "from": "master.level",
+      "to": "aberration",
+      "gain": 0.15
+    },
+    {
+      "from": "rhythm.0.pulse",
+      "to": "grain",
+      "gain": 0.04
+    },
+    {
+      "from": "rhythm.1.pulse",
+      "to": "bloom",
+      "gain": 0.06
+    },
+    {
+      "from": "snare.hit",
+      "to": "tilt_y",
+      "gain": 0.035
+    },
+    {
+      "from": "bass.hit",
+      "to": "tilt_x",
+      "gain": 0.03,
+      "curve": "square"
+    },
+    {
+      "from": "kick.hit",
+      "to": "aim_x",
+      "gain": 10,
+      "curve": "square"
+    }
   ]
 }

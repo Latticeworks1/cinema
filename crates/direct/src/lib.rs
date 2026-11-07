@@ -4,6 +4,7 @@
 //! and how the song feels) -> this crate (which vocabulary entries fit, how the camera moves,
 //! which parameters follow which signals) -> [`Plan::frame`], the state both render passes draw.
 
+pub mod anchors;
 pub mod camera;
 pub mod geometry;
 pub mod layout;
@@ -14,6 +15,7 @@ pub mod scenes;
 pub mod settings;
 pub mod vocab;
 
+pub use anchors::{Anchors, Mark};
 pub use camera::{Camera, project};
 pub use geometry::{H, Rect, W};
 pub use layout::{Layout, Panel, Timeline};
@@ -21,5 +23,5 @@ pub use matrix::{Matrix, Param};
 pub use lyric::{LyricLine, LyricState};
 pub use plan::{FrameState, LookState, Plan, Region, Sources, register};
 pub use scenes::{Direction, Scene};
-pub use settings::{Attention, CameraLimits, Chrome, Lyric, Marks, Priority, Shots, Stage, Tracker};
+pub use settings::{AnchorStyle, Attention, CameraLimits, Chrome, Lyric, Marks, Priority, Shots, Stage, Tracker};
 pub use vocab::{DisplayLayout, EmitKind, Slider, Vocabulary};

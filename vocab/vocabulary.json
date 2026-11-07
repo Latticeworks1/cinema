@@ -87,8 +87,6 @@
   "layouts": [
     { "name": "lanes",     "at": { "edge":  0.20, "energy": -0.60 }, "rule": "lanes", "slider": "linear" },
     { "name": "hero",      "at": { "edge":  0.00, "energy":  0.70 }, "rule": "hero",  "slider": "linear" },
-    { "name": "hero_ring", "at": { "edge": -0.80, "energy": -0.10 }, "rule": "hero",  "slider": "ring" },
-    { "name": "grid",      "at": { "edge":  0.70, "energy":  0.40 }, "rule": "grid",  "slider": "linear" },
-    { "name": "grid_ring", "at": { "edge": -0.20, "energy": -0.40 }, "rule": "grid",  "slider": "ring" }
+    { "name": "grid",      "at": { "edge":  0.70, "energy":  0.40 }, "rule": "grid",  "slider": "linear" }
   ]
 }

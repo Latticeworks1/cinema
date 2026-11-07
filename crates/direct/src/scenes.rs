@@ -7,7 +7,7 @@
 //! unusual amount of playing compared with its own average. The vocabulary entry for every
 //! other choice is the one nearest to the scene's measured feel.
 
-use crate::settings::{Motion, Attention, CameraLimits, Chrome, Ink, Lyric, Marks, Meter, Priority, Shots, Stage, Tracker};
+use crate::settings::{AnchorStyle, Motion, Attention, CameraLimits, Chrome, Fragments, Ink, Lyric, Marks, Meter, Plate, Priority, Shots, Stage, Tracker};
 use crate::vocab::{At, Vocabulary, nearest};
 use serde::{Deserialize, Serialize};
 use signals::{Axes, FeelModel, Selection};
@@ -49,6 +49,12 @@ pub struct Direction {
     pub meter: Meter,
     #[serde(default)]
     pub lyric: Lyric,
+    #[serde(default)]
+    pub fragments: Fragments,
+    #[serde(default)]
+    pub collage: Vec<Plate>,
+    #[serde(default)]
+    pub anchors: AnchorStyle,
     #[serde(default)]
     pub cues: Vec<Cue>,
 }
@@ -127,6 +133,8 @@ impl Direction {
             && d.chrome.band_span_panels > 0.0
             && d.chrome.merge_px > 0.0
             && d.chrome.meter_floor_db < d.chrome.meter_ceil_db
+            && d.collage.iter().all(Plate::valid)
+            && d.anchors.valid()
             && d.cues.iter().all(|c| c.t >= 0.0)
             && d.cues.iter().all(|c| match &c.word_times {
                 None => true,

@@ -1,0 +1,71 @@
+{
+ "schema": 1,
+ "image": "spring_windtree.png",
+ "sha256": "b8f9f1510d6051118de52eb6694cd011f156bdd7de2893ea903fa37eecb7a08a",
+ "size": [
+  1024,
+  783
+ ],
+ "backend": "grounding_dino",
+ "model": "IDEA-Research/grounding-dino-base",
+ "config": "3ba1d78a80a9",
+ "noise_floor": 0.294,
+ "threshold": 0.3675,
+ "boxes": [
+  {
+   "label": "person",
+   "score": 0.5087,
+   "box": [
+    0.8068,
+    0.7771,
+    0.941,
+    0.9363
+   ],
+   "id": "a0"
+  },
+  {
+   "label": "person",
+   "score": 0.4994,
+   "box": [
+    0.4154,
+    0.8055,
+    0.5504,
+    0.9395
+   ],
+   "id": "a1"
+  },
+  {
+   "label": "person",
+   "score": 0.456,
+   "box": [
+    0.7126,
+    0.7451,
+    0.8087,
+    0.9383
+   ],
+   "id": "a2"
+  },
+  {
+   "label": "person",
+   "score": 0.4333,
+   "box": [
+    0.5709,
+    0.7625,
+    0.6669,
+    0.9299
+   ],
+   "id": "a3"
+  },
+  {
+   "label": "flower",
+   "score": 0.4106,
+   "box": [
+    0.0417,
+    0.0927,
+    0.5818,
+    0.6316
+   ],
+   "id": "a4"
+  }
+ ]
+}

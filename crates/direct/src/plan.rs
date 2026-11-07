@@ -12,6 +12,7 @@ use crate::matrix::{Matrix, Param};
 use crate::scenes::{Direction, Scene, derive};
 use crate::vocab::{Framing, Vocabulary};
 use packet::{Packet, Section};
+use crate::anchors::{Anchors, Mark};
 use signals::{Bus, FeelModel, FeelSettings, SignalSettings};
 use std::{fs, path::Path, sync::Arc};
 use track::{FPS, Stem, Track};
@@ -34,6 +35,8 @@ pub struct Plan {
     pub scenes: Vec<Scene>,
     pub layouts: Vec<Layout>,
     pub lyrics: Vec<LyricLine>,
+    /// Motifs found in the plate images; empty until `packet prepare` has detected them.
+    pub anchors: Anchors,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -108,7 +111,21 @@ impl Plan {
             p.section(Section::Direction)?,
             p.section(Section::Signals)?,
         );
-        Plan::build(track, &Sources { feel: &feel, vocabulary: &vocabulary, matrix: &matrix, direction: &direction, signals: &signals })
+        let mut plan = Plan::build(track, &Sources { feel: &feel, vocabulary: &vocabulary, matrix: &matrix, direction: &direction, signals: &signals })?;
+        if p.anchors_path().exists() {
+            plan.anchors = Anchors::load(p.anchors_path())?;
+        }
+        Ok(plan)
+    }
+
+    /// Every anchor of every plate on screen at this frame, in the flat's world coordinates.
+    pub fn anchor_marks(&self, st: &FrameState) -> Vec<Mark> {
+        let mut out = vec![];
+        for p in &self.dir.collage {
+            let (Some(im), Some(at)) = (self.anchors.images.get(&p.image), p.placed(&self.dir, st)) else { continue };
+            out.extend(p.marks(&at, im));
+        }
+        out
     }
 
     pub fn build(track: Track, src: &Sources) -> Result<Plan, String> {
@@ -130,7 +147,7 @@ impl Plan {
         let timeline = Timeline { span_s: dir.panel_span_s, now_frac: dir.now_frac };
         let bus = Bus::with_settings(track.clone(), &SignalSettings::from_json(src.signals)?);
         let lyrics = lyric::lines(&scenes, &track, &dir);
-        Ok(Plan { track, bus, vocab, matrix, dir, timeline, scenes, layouts, lyrics })
+        Ok(Plan { track, bus, vocab, matrix, dir, timeline, scenes, layouts, lyrics, anchors: Anchors::default() })
     }
 
     pub fn track(&self) -> &Track {
@@ -529,7 +546,7 @@ mod tests {
             let s = p.frame(f);
             format!("{:?}{:?}", s.camera, s.look).hash(&mut hash);
         }
-        assert_eq!(hash.finish(), 16735921254544999239, "default camera/look state changed");
+        assert_eq!(hash.finish(), 7079847075976594544, "default camera/look state changed");
     }
 
     #[test]

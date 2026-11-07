@@ -378,7 +378,6 @@ def analyze(audio_path: Path | None, notes_path: Path, out_path: Path, cfg: dict
     peaks = {}
     for name, p in cfg["peaks"].items():
         if mono is None or not stems.get(p["stem"]):
-            peaks[name] = None
             continue
         n0 = stems[p["stem"]][0]
         a, b = float(n0["onset"]), float(n0["onset"]) + p["window_s"]

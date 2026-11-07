@@ -1,0 +1,71 @@
+{
+  "seed": 7,
+  "images": [
+    "spring_*.png",
+    "lab_*.png"
+  ],
+  "rate": {
+    "sparse": 3.0,
+    "busy": 18.0
+  },
+  "pieces": {
+    "sparse": 2,
+    "busy": 0
+  },
+  "size": {
+    "min": 0.11,
+    "max": 0.3
+  },
+  "beats": {
+    "min": 2,
+    "max": 8
+  },
+  "spawn_chance": 0.7,
+  "rot_deg": 7.0,
+  "drift": 0.004,
+  "pulse": 0.05,
+  "gain": {
+    "min": 1.0,
+    "max": 1.4
+  },
+  "opacity": {
+    "min": 0.9,
+    "max": 1.0
+  },
+  "fade_s": 0.25,
+  "lyric_dim": 0.6,
+  "margin": 0.03,
+  "max_overlap": 0.5,
+  "lyric_band": [
+    0.38,
+    0.66
+  ],
+  "tries": 24,
+  "frame": 3.0,
+  "matte": 0.85,
+  "reveal": {
+    "initial": 3,
+    "by": 0.8
+  },
+  "quiet": [],
+  "cutout": {
+    "prefix": "cut_"
+  },
+  "texture": {
+    "layers_sparse": 5,
+    "layers_busy": 8,
+    "zoom_min": 1.5,
+    "zoom_max": 3.0,
+    "visible": 0.3,
+    "opacity_min": 0.3,
+    "opacity_max": 0.6,
+    "rot_deg": 14.0,
+    "drift": 0.012,
+    "beats_min": 4,
+    "beats_max": 16
+  },
+  "motif": {
+    "max": 2,
+    "gap_s": 25.0
+  }
+}

@@ -254,6 +254,140 @@ impl Default for Lyric {
     }
 }
 
+/// How an image's brightness is mapped before the lens sends it through the scene's palette. The
+/// lens reads only brightness, so this is the control over tint: `gain` and `bias` move which
+/// palette stops the picture lands on (a bias towards 1 pulls it to the bright stops, a gain
+/// below 1 compresses it into the dark ones) and `invert` swaps light and dark. The result is
+/// `gain * brightness + bias`, after inversion, clamped to 0..1.
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields, default)]
+pub struct Tone {
+    pub gain: f32,
+    pub bias: f32,
+    pub invert: bool,
+}
+
+impl Default for Tone {
+    fn default() -> Self {
+        Tone { gain: 1.0, bias: 0.0, invert: false }
+    }
+}
+
+/// One image placed on the stage. `x`, `y`, `w` and `h` are fractions of the stage rectangle, so
+/// a plate keeps its place whatever the stage size. The image fills its box (`fit` "slice") or
+/// sits whole inside it ("meet"). Between `t0` and `t1` it is on screen, fading in and out over
+/// `fade_s`; an absent `t1` keeps it to the end. `drift` moves it, in stage fractions per second
+/// from `t0`, and `pulse` swells it with the music's pulse. `layer` "under" draws it behind the
+/// panels, "over" in front of them but behind the lyric. `image` is a file in the media folder.
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct Plate {
+    pub image: String,
+    #[serde(default)]
+    pub t0: f32,
+    #[serde(default)]
+    pub t1: Option<f32>,
+    pub x: f32,
+    pub y: f32,
+    pub w: f32,
+    pub h: f32,
+    #[serde(default)]
+    pub rot: f32,
+    #[serde(default = "Plate::one")]
+    pub opacity: f32,
+    #[serde(default = "Plate::fade")]
+    pub fade_s: f32,
+    #[serde(default)]
+    pub drift: (f32, f32),
+    #[serde(default)]
+    pub pulse: f32,
+    #[serde(default = "Plate::slice")]
+    pub fit: String,
+    #[serde(default = "Plate::under")]
+    pub layer: String,
+    /// What `x`, `y`, `w`, `h` and `drift` are fractions of: "stage" is the stage rectangle, so the
+    /// plate lives in the world and the camera can leave it; "view" is the rectangle the camera
+    /// currently sees, so the plate holds one place on screen through every move.
+    #[serde(default = "Plate::stage")]
+    pub space: String,
+    /// How much of the lyric dimming applies to the plate while a lyric line is on screen: 1 dims it
+    /// like the panels, 0 leaves it at full strength.
+    #[serde(default = "Plate::one")]
+    pub lyric_dim: f32,
+    #[serde(default)]
+    pub tone: Tone,
+    /// Width in pixels of a bright outline drawn around the plate; 0 draws none.
+    #[serde(default)]
+    pub frame: f32,
+    /// Opacity of a black mat drawn behind the plate, so it separates from a busy background.
+    #[serde(default)]
+    pub matte: f32,
+}
+
+impl Plate {
+    fn stage() -> String {
+        "stage".into()
+    }
+    fn one() -> f32 {
+        1.0
+    }
+    fn fade() -> f32 {
+        0.4
+    }
+    fn slice() -> String {
+        "slice".into()
+    }
+    fn under() -> String {
+        "under".into()
+    }
+    pub fn valid(&self) -> bool {
+        self.w > 0.0
+            && self.h > 0.0
+            && self.t0 >= 0.0
+            && self.t1.is_none_or(|t1| t1 > self.t0)
+            && (0.0..=1.0).contains(&self.opacity)
+            && self.fade_s >= 0.0
+            && self.tone.gain.is_finite()
+            && self.tone.bias.is_finite()
+            && matches!(self.fit.as_str(), "slice" | "meet")
+            && matches!(self.layer.as_str(), "under" | "over")
+            && matches!(self.space.as_str(), "stage" | "view")
+            && (0.0..=1.0).contains(&self.lyric_dim)
+            && self.frame >= 0.0
+            && (0.0..=1.0).contains(&self.matte)
+            && !self.image.contains(['\'', '<', '>', '&', '"'])
+    }
+}
+
+/// One source image cut into a grid of fragments. Fragment files are named
+/// `{prefix}_r{row}_c{col}.png` and live in the packet's media folder (tools/chop_fragments.py).
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct FragmentSet {
+    pub prefix: String,
+    pub rows: usize,
+    pub cols: usize,
+}
+
+/// Image fragments drawn in place of one stem's note marks in linear panels. A note's pitch
+/// register picks the row of its set and its position in the stem picks the column, so a rising
+/// line scans up through the picture. The set changes with the scene. An empty `stem` turns the
+/// layer off.
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields, default)]
+pub struct Fragments {
+    pub stem: String,
+    /// Height of a fragment in logical pixels; its width is the note's length.
+    pub height: f32,
+    pub sets: Vec<FragmentSet>,
+}
+
+impl Default for Fragments {
+    fn default() -> Self {
+        Fragments { stem: String::new(), height: 96.0, sets: Vec::new() }
+    }
+}
+
 /// Production-directed motion layered onto the selected camera behavior.
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
@@ -341,5 +475,48 @@ impl Motion {
                 .iter().all(|v| v.is_finite() && *v > 0.0)
             && [e.zoom_mix, e.aim_mix, e.tilt_decay, e.roll_decay]
                 .iter().all(|v| (0.0..=1.0).contains(v))
+    }
+}
+
+/// How image anchors are drawn over the filmed screen (lens pass): a recognition square on each
+/// detected motif, a small label, and thin links between nearby squares. One mark at a time is
+/// locked, picked by the register of the leading stem's newest note.
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct AnchorStyle {
+    pub on: bool,
+    /// Most squares on screen at once, strongest first.
+    pub cap: usize,
+    /// Squares smaller than this on screen (longest side, pixels) are not drawn.
+    pub min_px: f32,
+    /// Corner arm as a share of the shorter side of the square, clamped by `arm_min` and `arm_max`.
+    pub arm: f32,
+    pub arm_min: f32,
+    pub arm_max: f32,
+    pub label_px: f32,
+    /// Labels appear only on squares whose longest side is at least this many pixels.
+    pub label_min_px: f32,
+    /// Links from each square to this many of its nearest neighbours.
+    pub links: usize,
+    pub link_opacity: f32,
+    pub opacity: f32,
+}
+
+impl Default for AnchorStyle {
+    fn default() -> Self {
+        AnchorStyle { on: true, cap: 14, min_px: 28.0, arm: 0.22, arm_min: 5.0, arm_max: 26.0, label_px: 11.0, label_min_px: 64.0, links: 1, link_opacity: 0.35, opacity: 0.85 }
+    }
+}
+
+impl AnchorStyle {
+    pub fn valid(&self) -> bool {
+        self.cap > 0
+            && self.min_px >= 0.0
+            && self.arm > 0.0
+            && 0.0 < self.arm_min
+            && self.arm_min <= self.arm_max
+            && self.label_px > 0.0
+            && (0.0..=1.0).contains(&self.link_opacity)
+            && (0.0..=1.0).contains(&self.opacity)
     }
 }

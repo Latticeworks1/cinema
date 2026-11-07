@@ -1,0 +1,71 @@
+{
+ "schema": 1,
+ "image": "spring_picnic.png",
+ "sha256": "cc29ace1b1c55bdc175cdca091d9f492021a27104a3cc9d73f1d4983ce49669c",
+ "size": [
+  378,
+  150
+ ],
+ "backend": "grounding_dino",
+ "model": "IDEA-Research/grounding-dino-base",
+ "config": "3ba1d78a80a9",
+ "noise_floor": 0.0,
+ "threshold": 0.08,
+ "boxes": [
+  {
+   "label": "face",
+   "score": 0.4037,
+   "box": [
+    0.4677,
+    0.0657,
+    0.5263,
+    0.2611
+   ],
+   "id": "a0"
+  },
+  {
+   "label": "face",
+   "score": 0.3892,
+   "box": [
+    0.6916,
+    0.2415,
+    0.7566,
+    0.4346
+   ],
+   "id": "a1"
+  },
+  {
+   "label": "face",
+   "score": 0.3571,
+   "box": [
+    0.1271,
+    0.1493,
+    0.181,
+    0.3261
+   ],
+   "id": "a2"
+  },
+  {
+   "label": "face",
+   "score": 0.2333,
+   "box": [
+    0.2772,
+    0.599,
+    0.3224,
+    0.7573
+   ],
+   "id": "a3"
+  },
+  {
+   "label": "person",
+   "score": 0.2015,
+   "box": [
+    0.1631,
+    0.5075,
+    0.3347,
+    0.8974
+   ],
+   "id": "a4"
+  }
+ ]
+}

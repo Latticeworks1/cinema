@@ -4,6 +4,7 @@
 //! palette, bloom, chromatic aberration, the tear on a lock, and a display model whose subpixel
 //! geometry is chosen per panel. Every per-frame value comes from `direct::Plan::frame`.
 
+mod anchors;
 mod overlay;
 
 use direct::{DisplayLayout, FrameState, Plan};

@@ -1,0 +1,50 @@
+{
+  "backend": "grounding_dino",
+  "backends": {
+    "owlv2": {
+      "model": "google/owlv2-base-patch16-ensemble"
+    },
+    "grounding_dino": {
+      "model": "IDEA-Research/grounding-dino-base",
+      "text_threshold": 0.2
+    }
+  },
+  "device": "auto",
+  "download": true,
+  "prompts": [
+    "flower",
+    "blossom",
+    "petal",
+    "leaf",
+    "branch",
+    "tree",
+    "bud",
+    "person",
+    "face",
+    "child",
+    "building",
+    "ruin",
+    "crack",
+    "plant",
+    "water reflection",
+    "ripple",
+    "sun"
+  ],
+  "negative_prompts": [
+    "elephant",
+    "car",
+    "laptop",
+    "pizza",
+    "airplane"
+  ],
+  "calibration": {
+    "margin": 1.25,
+    "floor": 0.08
+  },
+  "nms_iou": 0.45,
+  "max_boxes": 10,
+  "min_side": 0.04,
+  "max_side": 0.6,
+  "min_opaque": 0.35,
+  "cache_dir": "~/.cache/cinema_models"
+}

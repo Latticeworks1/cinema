@@ -18,9 +18,11 @@ pub fn tracker<'a>(plan: &'a Plan, s: &FrameState) -> Svgr<'a> {
     }
     let scene = &plan.scenes[s.scene];
     let (Some(stem), Some(panel)) = (plan.track().stem(&scene.dominant), plan.lead_panel(s.scene)) else {
-        return Svgr::empty();
+        return fframes::svgr!(<g opacity={1.0 - s.look.out}>{super::anchors::marks(plan, s, None)}</g>);
     };
-    let Some(last) = stem.last_onset_at(s.t) else { return Svgr::empty() };
+    let Some(last) = stem.last_onset_at(s.t) else {
+        return fframes::svgr!(<g opacity={1.0 - s.look.out}>{super::anchors::marks(plan, s, None)}</g>);
+    };
     let slider = plan.layouts[s.scene].slider;
     let (arm, font) = (plan.dir.tracker.arm, plan.dir.font.clone());
     let ink = plan.dir.ink.lens_ink.as_str();
@@ -79,6 +81,7 @@ pub fn tracker<'a>(plan: &'a Plan, s: &FrameState) -> Svgr<'a> {
         items.push(fframes::svgr!(<text x={x0} y={y0 - 9.0} font-family={font} font-size="18" fill={color}>{label}</text>));
     }
 
+    items.extend(super::anchors::marks(plan, s, at(last)));
     items.extend(boxes(plan, s));
     fframes::svgr!(<g opacity={0.92 * (1.0 - s.look.out)}>{items}</g>)
 }
@@ -178,6 +181,7 @@ fn lyric_tracker<'a>(plan: &'a Plan, s: &FrameState, ly: &LyricState) -> Svgr<'a
         let label = format!("{}{} [x:{:.0} y:{:.0}]", if s.look.lock { "LOCK " } else { "" }, word, c.0, c.1);
         items.push(fframes::svgr!(<text x={x0} y={y0 - 10.0} font-family={font} font-size="18" fill={color}>{label}</text>));
     }
+    items.extend(super::anchors::marks(plan, s, pts.last().map(|p| p.1)));
     items.extend(boxes(plan, s));
     fframes::svgr!(<g opacity={0.92 * (1.0 - s.look.out)}>{items}</g>)
 }
