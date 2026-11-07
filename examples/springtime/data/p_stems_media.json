@@ -1,0 +1,20 @@
+{
+  "board": "",
+  "stage": [],
+  "present": [
+    "spring_apple",
+    "spring_crack",
+    "spring_crape",
+    "spring_cyanotype",
+    "spring_kids",
+    "spring_picnic",
+    "spring_plum",
+    "spring_ruin",
+    "spring_windtree"
+  ],
+  "no_cutout": [
+    "spring_cyanotype",
+    "spring_windtree"
+  ],
+  "excluded": {}
+}

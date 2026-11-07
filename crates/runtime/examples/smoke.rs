@@ -7,7 +7,7 @@ use std::path::PathBuf;
 
 fn main() {
     let root = concat!(env!("CARGO_MANIFEST_DIR"), "/../..");
-    let packet_path = format!("{root}/packets/hopeless.json");
+    let packet_path = format!("{root}/examples/springtime/packets/p_stems.json");
     let scratch = std::env::temp_dir().join(format!("cinema-runtime-smoke-{}", std::process::id()));
     std::fs::create_dir_all(&scratch).unwrap();
 
@@ -51,7 +51,7 @@ fn main() {
     println!("wrote {} ({size} bytes)", flat_excerpt.display());
     assert!(size > 0);
 
-    // This packet's own out/hopeless/pass/flat.mp4 already exists (rendered in an earlier
+    // This packet's own out/p_stems/pass/flat.mp4 already exists (rendered in an earlier
     // session), so render_lens_frame can succeed against it without exporting a full pass here.
     println!("render_lens_frame({lock_frame}) against the existing pass/flat.mp4");
     let lens_png = project.render_lens_frame(lock_frame).expect("render_lens_frame");

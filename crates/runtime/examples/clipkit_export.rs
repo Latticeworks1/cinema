@@ -1,5 +1,5 @@
 //! Milestone 3, step 1: exports a Clipkit (clipkit.dev) `Source` JSON whose only element is the
-//! existing, unchanged full-song render (`out/hopeless/cinema.mp4`) as a full-canvas background
+//! existing, unchanged full-song render (`out/p_stems/cinema.mp4`) as a full-canvas background
 //! `video`. The real renderer's real pixels are used as-is; nothing about the shader, camera or
 //! overlay pipeline is reimplemented here.
 //!
@@ -9,8 +9,8 @@ use std::path::PathBuf;
 
 fn main() {
     let root = concat!(env!("CARGO_MANIFEST_DIR"), "/../..");
-    let packet_path = format!("{root}/packets/hopeless.json");
-    let background = PathBuf::from(format!("{root}/out/hopeless/cinema.mp4"));
+    let packet_path = format!("{root}/examples/springtime/packets/p_stems.json");
+    let background = PathBuf::from(format!("{root}/out/p_stems/cinema.mp4"));
     assert!(background.exists(), "expected an existing full render at {}", background.display());
 
     let plan = direct::Plan::from_packet(&packet::Packet::load(&packet_path).unwrap()).unwrap();
@@ -35,7 +35,7 @@ fn main() {
         "elements": elements,
     });
 
-    let out_path = PathBuf::from(format!("{root}/out/hopeless/hopeless.clipkit.json"));
+    let out_path = PathBuf::from(format!("{root}/out/p_stems/p_stems.clipkit.json"));
     std::fs::write(&out_path, serde_json::to_string_pretty(&source).unwrap()).unwrap();
     println!(
         "wrote {} ({} element: background video)",

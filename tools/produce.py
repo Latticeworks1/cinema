@@ -4,8 +4,8 @@
     tools/produce.py PACKET [--skip media,collage] [--small] [--crf 27]
 
     plan     analysis and scene plan (the collage generator reads them)
-    media    stage the packet's images and cut out their subjects (data/NAME_media.json, if present)
-    collage  generate the collage plates (vocab/collage.json, data/NAME_collage.json, data/NAME_plates.json)
+    media    stage the packet's images and cut out their subjects (PROJECT/data/NAME_media.json, if present)
+    collage  generate the collage plates (vocab/collage.json, PROJECT/data/NAME_collage.json, PROJECT/data/NAME_plates.json)
     render   anchors for the plates in use, then every scene whose fingerprint changed, then the stitch
     small    a 1080p copy at a low bitrate (only with --small)
 
@@ -44,11 +44,12 @@ def main():
     packet = Path(a.packet)
     name = json.loads((ROOT / packet).read_text())["name"]
     py = sys.executable
-    media = ROOT / f"data/{name}_media.json"
+    project = (ROOT / packet).resolve().parent.parent
+    media = project / "data" / f"{name}_media.json"
     if "plan" not in skip:
         run(py, "tools/render_scenes.py", packet, "--prepare", "--list")
     if "media" not in skip and media.exists():
-        run(py, "tools/stage_media.py", media)
+        run(py, "tools/stage_media.py", media, "--media", project / "media")
     if "collage" not in skip:
         run(py, "tools/make_collage.py", packet)
     if "render" not in skip:

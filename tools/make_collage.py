@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Fill a packet's stretches with a seeded, music-driven collage of image plates.
 
-    tools/make_collage.py PACKET [--config vocab/collage.json] [--overlay data/NAME_collage.json]
-                          [--pinned data/NAME_plates.json] [--run out/NAME] [--media media]
+    tools/make_collage.py PACKET [--config vocab/collage.json] [--overlay PROJECT/data/NAME_collage.json]
+                          [--pinned PROJECT/data/NAME_plates.json] [--run out/NAME] [--media PROJECT/media]
                           [--pin-current] [--dry-run]
 
 Plates are written into the packet's `set.direction.collage`, which this tool then owns: plates a
@@ -199,19 +199,20 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("packet")
     ap.add_argument("--config", default=str(Path(__file__).resolve().parent.parent / "vocab" / "collage.json"))
-    ap.add_argument("--overlay", help="per-packet settings laid over the config (default data/NAME_collage.json)")
+    ap.add_argument("--overlay", help="per-packet settings laid over the config (default PROJECT/data/NAME_collage.json)")
     ap.add_argument("--pinned")
     ap.add_argument("--run")
-    ap.add_argument("--media", default="media")
+    ap.add_argument("--media")
     ap.add_argument("--pin-current", action="store_true")
     ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args()
 
     pkt = Path(a.packet)
     doc = json.loads(pkt.read_text())
-    cfg = load_config(a.config, a.overlay or f"data/{doc['name']}_collage.json")
+    project = pkt.resolve().parent.parent
+    cfg = load_config(a.config, a.overlay or str(project / "data" / f"{doc['name']}_collage.json"))
     run = Path(a.run or f"out/{doc['name']}")
-    pinned_path = Path(a.pinned or f"data/{doc['name']}_plates.json")
+    pinned_path = Path(a.pinned or project / "data" / f"{doc['name']}_plates.json")
     direction = doc.setdefault("set", {}).setdefault("direction", {})
     if a.pin_current:
         if pinned_path.exists():
@@ -222,11 +223,12 @@ def main():
 
     plan = json.loads((run / "plan.json").read_text())
     stems = json.loads((run / "analysis.json").read_text())["stems"]
-    media = Path(a.media)
-    images = [(p.name, Image.open(p).size) for p in sorted(media.iterdir()) if any(fnmatch.fnmatch(p.name, g) for g in cfg["images"])]
+    media = Path(a.media) if a.media else project / "media"
+    pre = cfg["cutout"]["prefix"]
+    images = [(p.name, Image.open(p).size) for p in sorted(media.iterdir())
+              if not p.name.startswith(pre) and any(fnmatch.fnmatch(p.name, g) for g in cfg["images"])]
     if not images:
         fail(f"no image in {media} matches {cfg['images']}")
-    pre = cfg["cutout"]["prefix"]
     cutouts = {n: (pre + n, Image.open(media / (pre + n)).size) for n, _ in images if (media / (pre + n)).exists()}
     made = generate(cfg, plan["scenes"], stems, plan["recording"], images, cutouts or None)
     allp = sorted(pinned + made, key=lambda p: p.get("t0", 0))

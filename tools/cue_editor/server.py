@@ -205,7 +205,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         parsed = urlparse(self.path)
         qs = parse_qs(parsed.query)
-        name = qs.get("packet", ["hopeless"])[0]
+        name = qs.get("packet", ["default"])[0]
 
         if parsed.path in ("/", "/index.html"):
             self._static("index.html")
@@ -221,7 +221,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         parsed = urlparse(self.path)
         qs = parse_qs(parsed.query)
-        name = qs.get("packet", ["hopeless"])[0]
+        name = qs.get("packet", ["default"])[0]
         if parsed.path != "/api/save":
             self._error(404, "not found")
             return

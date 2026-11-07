@@ -57,6 +57,12 @@ The flat and lens crates are built in separate cargo invocations, as the script 
 
 Build products are shared with a sibling `../ff-unmute` checkout through `.cargo/config.toml`; delete that file to use a local `target/` directory instead.
 
+## Project folders and the example
+
+A packet belongs to a project folder, which is the parent of the folder holding the packet. For the packets in `packets/` that is the repository root. A project folder holds the material that belongs to one piece and not to the program: `data/NAME_media.json`, `data/NAME_collage.json`, `data/NAME_plates.json`, `data/NAME_lyrics.txt` and its other sidecar files, a `media/` folder of pictures, and the anchor records under `data/anchors/`. The tools that read these (`tools/make_collage.py`, `tools/produce.py`, `tools/stage_media.py`) find them from the packet's location, so a second piece is a second project folder and never changes the program.
+
+`examples/springtime` is one complete project of this kind: a two-minute piece for a multitrack recording, with its packet, authored cues and lyric timing, nine pictures with their subject cutouts, and the collage settings that make it. It shows how the pieces fit together and is read as a template. The recording is not distributed. Its stems go in `examples/springtime/audio/`, and its README describes the layout and the commands. The shipped `packets/default.json` names `data/audio.wav` and `data/notes.json`, which are likewise not distributed, so a first run needs a recording and its transcription supplied by the person running it. `data/analysis.json` is a fixed analysis used by the test suite and by the examples that need a track.
+
 ## Provenance
 
 `python/export_analysis.py`, the Catmull-Rom spline, the keyed noise and the JetBrains Mono font come from the author's earlier ff-unmute and ff-tracking studies. The font is under the SIL Open Font License (`licenses/`). The rest of the code is MIT licensed.

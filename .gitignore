@@ -15,4 +15,5 @@ tools/transcribe_vocal
 media/*.png
 media/*.jpg
 media/*.jpeg
-data/springtime/
+examples/*/audio
+examples/*/audio/

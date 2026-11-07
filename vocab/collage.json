@@ -1,8 +1,7 @@
 {
   "seed": 7,
   "images": [
-    "spring_*.png",
-    "lab_*.png"
+    "*.png"
   ],
   "rate": {
     "sparse": 3.0,

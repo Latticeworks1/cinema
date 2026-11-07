@@ -148,8 +148,18 @@ impl Project {
 mod tests {
     use super::*;
 
+    /// A packet that extends the shipped default and runs in a scratch folder holding the analysis
+    /// fixture, so opening it needs no audio and no earlier render.
     fn packet_path() -> String {
-        format!("{}/../../packets/hopeless.json", env!("CARGO_MANIFEST_DIR"))
+        let root = env!("CARGO_MANIFEST_DIR");
+        let scratch = std::env::temp_dir().join(format!("cinema-runtime-test-open-{}", std::process::id()));
+        let run_dir = scratch.join("out/fixture");
+        std::fs::create_dir_all(&run_dir).unwrap();
+        std::fs::copy(format!("{root}/../../data/analysis.json"), run_dir.join("analysis.json")).unwrap();
+        let path = scratch.join("fixture.json");
+        let doc = format!(r#"{{"extends":"{root}/../../packets/default.json","name":"fixture","out":"{}"}}"#, scratch.join("out").display());
+        std::fs::write(&path, doc).unwrap();
+        path.display().to_string()
     }
 
     #[test]
@@ -182,12 +192,12 @@ mod tests {
         let root = env!("CARGO_MANIFEST_DIR");
         let scratch = std::env::temp_dir().join(format!("cinema-runtime-test-nolens-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&scratch);
-        let run_dir = scratch.join("out/hopeless");
+        let run_dir = scratch.join("out/fixture");
         std::fs::create_dir_all(&run_dir).unwrap();
         // A real analysis.json (so Plan::from_packet resolves) but deliberately no pass/flat.mp4.
-        std::fs::copy(format!("{root}/../../out/hopeless/analysis.json"), run_dir.join("analysis.json")).unwrap();
+        std::fs::copy(format!("{root}/../../data/analysis.json"), run_dir.join("analysis.json")).unwrap();
         let packet_json = format!(
-            r#"{{"extends":"{root}/../../packets/hopeless.json","name":"hopeless","out":"{}"}}"#,
+            r#"{{"extends":"{root}/../../packets/default.json","name":"fixture","out":"{}"}}"#,
             scratch.join("out").display()
         );
         let path = scratch.join("no_flat.json");
