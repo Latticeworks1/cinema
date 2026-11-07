@@ -78,10 +78,10 @@ Packets under `packets/` define run configurations:
 ```json
 {
   "extends": "default.json",
-  "name": "spicyface",
+  "name": "song",
   "inputs": {
-    "audio": "../data/SPICYFACE.mp3",
-    "notes": "../data/spicyface_notes.json"
+    "audio": "../data/song.mp3",
+    "notes": "../data/song_notes.json"
   }
 }
 ```
@@ -90,9 +90,9 @@ Packets under `packets/` define run configurations:
 ```json
 {
   "extends": "default.json",
-  "name": "spicyface",
+  "name": "song",
   "inputs": {
-    "audio": "../data/SPICYFACE.mp3",
+    "audio": "../data/song.mp3",
     "notes": null
   },
   "transcriber": ["python3", "tools/midi_to_notes.py", "{audio}", "{notes}"]

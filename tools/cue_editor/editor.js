@@ -12,7 +12,7 @@
 //                 timing". Shown as a dashed preview so it's never silently invisible.
 
 const qs = new URLSearchParams(location.search);
-const PACKET = qs.get('packet') || 'hopeless';
+const PACKET = qs.get('packet') || 'default';
 
 const el = {
   playBtn: document.getElementById('playBtn'),
