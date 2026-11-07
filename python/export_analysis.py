@@ -17,6 +17,7 @@ import argparse
 import hashlib
 import json
 import math
+import subprocess
 import sys
 import wave
 from pathlib import Path

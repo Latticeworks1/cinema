@@ -34,7 +34,12 @@ fn prepare(p: &Packet) -> Result<(), String> {
     run(&mut cmd, "export_analysis.py")?;
     detect_anchors(p, &python)?;
     match &p.audio {
-        Some(audio) => drop(fs::copy(audio, p.music_path()).map_err(io)?),
+        Some(audio) if audio.extension().is_some_and(|e| e.eq_ignore_ascii_case("wav")) => drop(fs::copy(audio, p.music_path()).map_err(io)?),
+        // Any other container is decoded to PCM so the soundtrack file is a real wav.
+        Some(audio) => run(
+            Command::new("ffmpeg").args(["-v", "error", "-y", "-i"]).arg(audio).args(["-vn", "-c:a", "pcm_s16le"]).arg(p.music_path()),
+            "ffmpeg",
+        )?,
         None => {
             let _ = fs::remove_file(p.music_path());
         }

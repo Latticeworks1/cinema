@@ -1,11 +1,16 @@
 #!/usr/bin/env bash
 # packet -> analysis -> plan -> flat pass -> lens pass.
-# Usage: tools/render.sh [packet.json]   (default packets/default.json)
+# Usage: tools/render.sh PACKET.json | AUDIO_FILE [range]
+# An audio file of any name or format gets a packet written for it first (tools/make_packet.py).
 # Everything is written under <out>/<packet name>/ (see `packet show`).
 # CINEMA_PYTHON selects the interpreter for the analysis (default python3).
 set -euo pipefail
 cd "$(dirname "$0")/.."
-export CINEMA_PACKET="${1:-packets/default.json}"
+ARG="${1:?usage: tools/render.sh PACKET.json | AUDIO_FILE}"
+case "$ARG" in
+    *.json) export CINEMA_PACKET="$ARG" ;;
+    *)      export CINEMA_PACKET="$(python3 tools/make_packet.py "$ARG" --force)" ;;
+esac
 mkdir -p out
 
 RANGE="${2:-}"

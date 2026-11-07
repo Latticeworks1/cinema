@@ -152,12 +152,14 @@ mod tests {
     /// fixture, so opening it needs no audio and no earlier render.
     fn packet_path() -> String {
         let root = env!("CARGO_MANIFEST_DIR");
-        let scratch = std::env::temp_dir().join(format!("cinema-runtime-test-open-{}", std::process::id()));
+        static NEXT: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+        let n = NEXT.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        let scratch = std::env::temp_dir().join(format!("cinema-runtime-test-open-{}-{n}", std::process::id()));
         let run_dir = scratch.join("out/fixture");
         std::fs::create_dir_all(&run_dir).unwrap();
         std::fs::copy(format!("{root}/../../data/analysis.json"), run_dir.join("analysis.json")).unwrap();
         let path = scratch.join("fixture.json");
-        let doc = format!(r#"{{"extends":"{root}/../../packets/default.json","name":"fixture","out":"{}"}}"#, scratch.join("out").display());
+        let doc = format!(r#"{{"extends":"{root}/../../packets/default.json","name":"fixture","inputs":{{"audio":null,"notes":"{root}/../../data/notes.json"}},"out":"{}"}}"#, scratch.join("out").display());
         std::fs::write(&path, doc).unwrap();
         path.display().to_string()
     }
@@ -197,7 +199,7 @@ mod tests {
         // A real analysis.json (so Plan::from_packet resolves) but deliberately no pass/flat.mp4.
         std::fs::copy(format!("{root}/../../data/analysis.json"), run_dir.join("analysis.json")).unwrap();
         let packet_json = format!(
-            r#"{{"extends":"{root}/../../packets/default.json","name":"fixture","out":"{}"}}"#,
+            r#"{{"extends":"{root}/../../packets/default.json","name":"fixture","inputs":{{"audio":null,"notes":"{root}/../../data/notes.json"}},"out":"{}"}}"#,
             scratch.join("out").display()
         );
         let path = scratch.join("no_flat.json");

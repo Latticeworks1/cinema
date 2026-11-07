@@ -1,6 +1,6 @@
 {
   "name": "default",
-  "inputs": { "audio": "../data/audio.wav", "notes": "../data/notes.json" },
+  "inputs": { "audio": null, "notes": null },
   "vocab": "../vocab",
   "media": "../media",
   "out": "../out",
